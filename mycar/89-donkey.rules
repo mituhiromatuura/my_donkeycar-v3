@@ -1,0 +1,4 @@
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATTRS{phys}=="dc:a6:32:0f:1a:70",ATTRS{uniq}=="0c:fc:83:7c:c2:81",SYMLINK+="LAT-RC01-1"
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATTRS{phys}=="dc:a6:32:0f:1a:70",ATTRS{uniq}=="0c:fc:83:6a:71:47",SYMLINK+="LAT-RC01-2"
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATTRS{phys}=="dc:a6:32:0f:1a:70",ATTRS{uniq}=="0c:fc:83:06:96:c5",SYMLINK+="LAT-RC01-3"
+KERNEL=="ttyACM*",ATTRS{idVendor}=="04b4",ATTRS{product}=="USBUART",SYMLINK+="tty-psoc"
