@@ -33,13 +33,17 @@ class FPVDisp:
         GPIO.setup(self.gpio_pin_local, GPIO.OUT)
         GPIO.output(self.gpio_pin_local, self.led_off)
 
-        self.gpio_pin_overtime = 13 #GPIO13 21 #GPIO9
-        GPIO.setup(self.gpio_pin_overtime, GPIO.OUT)
-        GPIO.output(self.gpio_pin_overtime, self.led_off)
-
         self.gpio_pin_vtb_on = 11 #GPIO17
         GPIO.setup(self.gpio_pin_vtb_on, GPIO.OUT)
         GPIO.output(self.gpio_pin_vtb_on, GPIO.LOW)
+
+        self.gpio_pin_buzzer = 36 #GPIO20
+        GPIO.setup(self.gpio_pin_buzzer, GPIO.OUT)
+        GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
+
+        GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
+        time.sleep(0.5)
+        GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
 
         #self.fullscreen = True
         self.disp_imu = True
@@ -219,21 +223,26 @@ class FPVDisp:
         else:
             if self.mode == 'local_angle':
                 GPIO.output(self.gpio_pin_local_angle, self.led_on)
+                GPIO.output(self.gpio_pin_local, self.led_off)
             elif self.mode == 'local':
+                GPIO.output(self.gpio_pin_local_angle, self.led_off)
                 GPIO.output(self.gpio_pin_local, self.led_on)
 
-        if self.mode != "user":
-            return
+        #if self.mode != "user":
+        #    return
 
         cv2.namedWindow('DonkeyCamera', cv2.WINDOW_NORMAL)
+        #cv2.namedWindow('DonkeyCamera', cv2.WINDOW_AUTOSIZE)
 
         if self.recording:
             color = (255,0,0) #red
+        elif not self.esc_on:
+            color = (255,255,0) #yellow
         else:
             color = (0,255,0) #green
 
-        wwidth = 160
-        wheight = 120
+        wwidth = self.cfg.IMAGE_W
+        wheight = self.cfg.IMAGE_H
 
         '''
         width = self.cfg.IMAGE_W
@@ -256,8 +265,8 @@ class FPVDisp:
 
         x0=int(round(wwidth/2))
         y0=int(round(wheight))
-        x1=int(round(wwidth/2+wwidth/2*self.angle))
-        y1=int(round(wheight-wheight*self.throttle))
+        x1=int(round(wwidth/2 + wwidth/2*self.angle))
+        y1=int(round(wheight - wheight*self.throttle))
 
         cv2.line(img,(x0 ,y0),(x1,y1),color,2)
 
@@ -278,7 +287,7 @@ class FPVDisp:
         if self.constant_throttle:
             cv2.putText(img,'CONST',(8*9,9),textFontFace,textFontScale,textColor,textThickness)
         if self.disp_callsign:
-            cv2.putText(img,'JS2IHP',(wwidth-44,9),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,'JS2IHP',(wwidth-8*6,29),textFontFace,textFontScale,textColor,textThickness)
             GPIO.output(self.gpio_pin_vtb_on, GPIO.HIGH)
         else:
             GPIO.output(self.gpio_pin_vtb_on, GPIO.LOW)
@@ -288,27 +297,27 @@ class FPVDisp:
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
 
-        cv2.putText(img,'1',(40,119),textFontFace,textFontScale,textColor if self.lat1 else (255,255,0),textThickness)
-        cv2.putText(img,'2',(50,119),textFontFace,textFontScale,textColor if self.lat2 else (255,255,0),textThickness)
-        cv2.putText(img,'3',(60,119),textFontFace,textFontScale,textColor if self.lat3 else (255,255,0),textThickness)
+        cv2.putText(img,'o',(60,wheight-1),textFontFace,textFontScale,textColor if self.lat1 else (255,255,0),textThickness)
+        cv2.putText(img,'o',(50,wheight-1),textFontFace,textFontScale,textColor if self.lat2 else (255,255,0),textThickness)
+        cv2.putText(img,'o',(55,wheight-11),textFontFace,textFontScale,textColor if self.lat3 else (255,255,0),textThickness)
 
         if self.stop == True:
             cv2.putText(img,'STOP',(65,69),textFontFace,textFontScale,(255,0,0),textThickness)
         if self.esc_on == False:
-            cv2.putText(img,'ESC OFF',(55,79),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,'ESC OFF',(wwidth-8*7,9),textFontFace,textFontScale,textColor,textThickness)
 
+        #cv2.putText(img,str(self.cfg.DRIVE_LOOP_HZ),(0,79),textFontFace,textFontScale,textColor,textThickness)
         if self.mode == "user" and not self.auto_record_on_throttle:
             self.rectime = time.time()
             sec = 0
         else:
             sec=int(time.time()-self.rectime)
-        cv2.putText(img,str(sec//60)+':'+str(sec%60),(0,79),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.cfg.DRIVE_LOOP_HZ),(0,89),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.num_records),(0,99),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(sec//60)+':'+str(sec%60),(0,wheight-21),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.num_records),(90,wheight-21),textFontFace,textFontScale,textColor,textThickness)
 
-        cv2.putText(img,str(self.spi_angle),(90,109),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.spi_throttle),(125,109),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.spi_revcount),(90,119),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.spi_angle),(90,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.spi_throttle),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.spi_revcount),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:
             #if self.disp_imu:
@@ -356,44 +365,36 @@ class FPVDisp:
                 cv2.circle(img,(x ,y),2,(0,0,255),-1)
 
         if self.cfg.HAVE_INA226:
-            cv2.putText(img,str(round(self.volt_b,2)),(0,109),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,str(round(self.volt_a,2)),(0,119),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,str(round(self.volt_b,2)),(0,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,str(round(self.volt_a,2)),(0,wheight-1),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_ADS1115:
-            '''
-            cv2.putText(img,str(round(self.dist0,2)),(70,29),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,str(round(self.dist1,2)),(70,39),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,str(round(self.dist2,2)),(70,49),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,str(round(self.dist3,2)),(70,59),textFontFace,textFontScale,textColor,textThickness)
-            '''
             cv2.circle(img,(wwidth//4*1,wheight//2),int(self.dist2*40),(0,255,0),1)
             cv2.circle(img,(wwidth//4*2,wheight//2),int(self.dist0*40),(0,255,0),1)
-            #cv2.circle(img,(wwidth//4*2,wheight//2),int(self.dist3*40),(0,255,0),1)
             cv2.circle(img,(wwidth//4*3,wheight//2),int(self.dist1*40),(0,255,0),1)
 
-        if self.period_time > 1000 / self.cfg.DRIVE_LOOP_HZ:
+        if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red
-            GPIO.output(self.gpio_pin_overtime, self.led_on)
         else:
             period_color = (0,255,0) #green
-            GPIO.output(self.gpio_pin_overtime, self.led_off)
 
         if self.period_time > 99.9:
-            pos = (159-3*8,119)
+            pos = (159-3*8,wheight-1)
         elif self.period_time > 9.9:
-            pos = (159-2*8,119)
+            pos = (159-2*8,wheight-1)
         else:
-            pos = (159-1*8,119)
+            pos = (159-1*8,wheight-1)
         cv2.putText(img,str(int(self.period_time)),pos,textFontFace,textFontScale,period_color,textThickness)
 
         #if self.fullscreen:
         if self.sw_l3:
             cv2.resizeWindow("DonkeyCamera",640,480)
-            cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            #cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         else:
-            cv2.resizeWindow("DonkeyCamera",640*80//100,480*80//100)
-            cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("DonkeyCamera",160,120)
+            #cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
         cv2.imshow('DonkeyCamera', img[:,:,::-1])
+
         wk = cv2.waitKey(1) & 0xff
         if wk == ord('q'):
             cv2.destroyAllWindows()

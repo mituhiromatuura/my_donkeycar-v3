@@ -73,7 +73,7 @@ class PiGPIO_PWM():
 
     def set_pulse(self, pulse):
         if self.inverted:
-          pulse = 2 * 1500 - pulse #1500 is STEERING_CENTER_PWM, THROTTLE_STOPPED_PWM
+          pulse = 2 * 1540 - pulse #1540 is STEERING_CENTER_PWM, THROTTLE_STOPPED_PWM
         self.pgio.hardware_PWM(self.pin, self.freq, int(pulse * self.freq))
 
     def run(self, pulse):
@@ -224,8 +224,12 @@ class PWMThrottle:
                  zero_pulse=350):
 
         self.controller = controller
-        self.max_pulse = max_pulse
-        self.min_pulse = min_pulse
+        if max_pulse > min_pulse:
+            self.max_pulse = max_pulse - 1
+            self.min_pulse = min_pulse + 1
+        else:
+            self.max_pulse = max_pulse + 1
+            self.min_pulse = min_pulse - 1
         self.zero_pulse = zero_pulse
         self.pulse = zero_pulse
 
@@ -245,10 +249,10 @@ class PWMThrottle:
             self.controller.set_pulse(self.pulse)
 
     def run_threaded(self, throttle):
-        if throttle > 0:
+        if throttle > 0 and throttle < 1.0:
             self.pulse = dk.utils.map_range(throttle, 0, self.MAX_THROTTLE,
                                             self.zero_pulse, self.max_pulse)
-        else:
+        elif throttle > -1.0:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
                                             self.min_pulse, self.zero_pulse)
 

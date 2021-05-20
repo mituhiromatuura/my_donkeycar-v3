@@ -28,15 +28,15 @@ class LedCtrl:
 		else:
 			left = OFF
 			right = OFF
+
 		if mode == 'local_angle':
-			left = 0.5
-			right = 0.5
-			tail = ON
+			tail = OFF
+			blue = OFF
+			green = ON
 		elif mode == 'local':
-			left = 0.5
-			right = 0.5
-			tail = ON
+			tail = OFF
 			blue = ON
+			green = OFF
 		if const:
 			green = ON
 		return head, tail, left, right, blue, green

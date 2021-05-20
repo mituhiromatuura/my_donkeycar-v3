@@ -61,6 +61,17 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #Initialize car
     V = dk.vehicle.Vehicle()
 
+    class PeriodTime:
+        def __init__(self):
+            self.time = time.time()
+
+        def run(self):
+            period = (time.time() - self.time) * 1000 # msec
+            self.time = time.time()
+            return period
+
+    V.add(PeriodTime(), outputs=['period_time'])
+
     print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
     if camera_type == "stereo":
 
@@ -135,7 +146,32 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         V.add(cam, inputs=inputs, outputs=['cam/image_array'], threaded=threaded)
 
-    if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
+    if (use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT) and cfg.CONTROLLER_TYPE == "TTU":
+        from donkeycar.parts.controller_propo import TTUJoystickController
+        ctr = TTUJoystickController(
+            throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
+            throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
+            steering_scale=cfg.JOYSTICK_STEERING_SCALE,
+            auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
+        V.add(ctr,
+            inputs=['cam/image_array'],
+            outputs =['user/angle', 'user/throttle', 'user/mode', 'recording',
+                'ch1', 'ch2', 'ch3', 'ch4',
+                'auto_record_on_throttle',
+                'constant_throttle',
+                'throttle_scale',
+                'ai_throttle_mult',
+                'disp_on',
+                'esc_on',
+                'sw_l3',
+                'sw_r3',
+                'VTXPower_value',
+                'lat1',
+                'lat2',
+                'lat3'],
+            threaded=True)
+
+    elif use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         #modify max_throttle closer to 1.0 to have more power
         #modify steering_scale lower than 1.0 to have less responsive steering
         if cfg.CONTROLLER_TYPE == "MM1":
@@ -180,7 +216,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     #this throttle filter will allow one tap back for esc reverse
     th_filter = ThrottleFilter()
-    V.add(th_filter, inputs=['user/throttle'], outputs=['user/throttle'])
+    #V.add(th_filter, inputs=['user/throttle'], outputs=['user/throttle'])
 
     #See if we should even run the pilot module.
     #This is only needed because the part run_condition only accepts boolean
@@ -277,7 +313,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             return 0
 
     rec_tracker_part = RecordTracker()
-    V.add(rec_tracker_part, inputs=["tub/num_records"], outputs=['records/alert'])
+    #V.add(rec_tracker_part, inputs=["tub/num_records"], outputs=['records/alert'])
 
     if cfg.AUTO_RECORD_ON_THROTTLE and isinstance(ctr, JoystickController):
         #then we are not using the circle button. hijack that to force a record count indication
@@ -298,6 +334,47 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(imu, outputs=['imu/acl_x', 'imu/acl_y', 'imu/acl_z',
             'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z'], threaded=True)
 
+    #INA226
+    if cfg.HAVE_INA226:
+        from donkeycar.parts.ina226 import Ina226
+        ina226_a = Ina226(0x48)
+        V.add(ina226_a, outputs=['volt_a'], threaded=True)
+        ina226_b = Ina226(0x49)
+        V.add(ina226_b, outputs=['volt_b'], threaded=True)
+
+    #ADS1115
+    if cfg.HAVE_ADS1115:
+        from donkeycar.parts.ads1115 import Ads1115
+        V.add(Ads1115(0x4b), outputs=['dist0','dist1','dist2','dist3'], threaded=True)
+
+    #LAMP
+    from donkeycar.parts.lamp import LedCtrl
+    V.add(LedCtrl(cfg), inputs = ['user/mode', 'user/throttle', 'auto_record_on_throttle', 'constant_throttle', 'esc_on'],
+        outputs = ['led/head', 'led/tail', 'led/left', 'led/right', 'led/blue', 'led/green'])
+
+    from donkeycar.parts.led_pca9685 import LED
+    V.add(LED(), inputs=[
+        'led/head',
+        'led/left',
+        'led/right',
+        'led/head',
+
+        'led/head',
+        'led/head',
+
+        'led/head', #red out
+        'led/green', #green
+        'led/blue', #blue
+        'led/left', #yerrow
+        'led/tail', #red in
+
+        'led/tail', #red in
+        'led/right', #yerrow
+        'led/blue', #blue
+        'led/green', #green
+        'led/head'], #red out
+        threaded=True)
+
     class ImgPreProcess():
         '''
         preprocess camera image for inference.
@@ -313,10 +390,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inf_input = 'cam/image_array'
     else:
         inf_input = 'cam/normalized/cropped'
+        '''
         V.add(ImgPreProcess(cfg),
             inputs=['cam/image_array'],
             outputs=[inf_input],
             run_condition='run_pilot')
+        '''
 
     # Use the FPV preview, which will show the cropped image output, or the full frame.
     if cfg.USE_FPV:
@@ -405,6 +484,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             print("ERR>> Unknown extension type on model file!!")
             return
 
+        '''
         #this part will signal visual LED, if connected
         V.add(FileWatcher(model_path, verbose=True), outputs=['modelfile/modified'])
 
@@ -412,6 +492,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(FileWatcher(model_path), outputs=['modelfile/dirty'], run_condition="ai_running")
         V.add(DelayedTrigger(100), inputs=['modelfile/dirty'], outputs=['modelfile/reload'], run_condition="ai_running")
         V.add(TriggeredCallback(model_path, model_reload_cb), inputs=["modelfile/reload"], run_condition="ai_running")
+        '''
 
         outputs=['pilot/angle', 'pilot/throttle']
 
@@ -446,6 +527,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
           outputs=['angle', 'throttle'])
 
 
+    '''
     #to give the car a boost when starting ai mode in a race.
     aiLauncher = AiLaunch(cfg.AI_LAUNCH_DURATION, cfg.AI_LAUNCH_THROTTLE, cfg.AI_LAUNCH_KEEP_ENABLED)
 
@@ -455,6 +537,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if isinstance(ctr, JoystickController):
         ctr.set_button_down_trigger(cfg.AI_LAUNCH_ENABLE_BUTTON, aiLauncher.enable_ai_launch)
+    '''
 
 
     class AiRunCondition:
@@ -548,7 +631,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
     
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
-        from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
+        from donkeycar.parts.actuator_pigpio import PWMSteering, PWMThrottle, PiGPIO_PWM
         steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED)
         steering = PWMSteering(controller=steering_controller,
                                         left_pulse=cfg.STEERING_LEFT_PWM, 
@@ -598,6 +681,18 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inputs += ['pilot/angle', 'pilot/throttle']
         types += ['float', 'float']
 
+    if cfg.HAVE_INA226:
+        inputs += ['volt_a', 'volt_b']
+        types  += ['float',  'float']
+
+    if cfg.HAVE_ADS1115:
+        inputs += ['dist0', 'dist1', 'dist2', 'dist3']
+        types  += ['float', 'float', 'float', 'float']
+
+    if cfg.HAVE_REVCOUNT:
+        inputs += ['ch3','ch4']
+        types  += ['int','int']
+
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types, user_meta=meta)
     V.add(tub, inputs=inputs, outputs=["tub/num_records"], run_condition='recording')
@@ -629,6 +724,49 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
             ctr.set_button_down_trigger('cross', new_tub_dir)
         ctr.print_controls()
+
+    if cfg.USE_FPVDISP:
+        from donkeycar.parts.fpvdisp import FPVDisp
+        V.add(FPVDisp(cfg), 
+            inputs=[
+                'user/mode',
+                'cam/image_array',
+                'angle',
+                'throttle',
+                'ch1',
+                'ch2',
+                'ch4',
+                'imu/acl_x',
+                'imu/acl_y',
+                'imu/acl_z',
+                'imu/gyr_x',
+                'imu/gyr_y',
+                'imu/gyr_z',
+                'volt_a',
+                'volt_b',
+                'dist0',
+                'dist1',
+                'dist2',
+                'dist3',
+                'pwmcount',
+                'recording',
+                'auto_record_on_throttle',
+                'constant_throttle',
+                'throttle_scale',
+                'ai_throttle_mult',
+                'disp_on',
+                'esc_on',
+                'sw_l3',
+                'sw_r3',
+                'stop',
+                'tub/num_records',
+                'lat1',
+                'lat2',
+                'lat3',
+                'period_time'
+            ],
+            threaded=True
+        )
 
     #run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,

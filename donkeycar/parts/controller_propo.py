@@ -357,19 +357,6 @@ class JoystickController(object):
                 self.fram.write(1, self.ai_throttle_mult)
 
 
-    def set_auto_throttle_off(self, axis_val):
-        if axis_val < 0 and self.auto_throttle_off > 0.0:
-            self.auto_throttle_off = round(self.auto_throttle_off - 0.1, 1)
-            print("auto_throttle_off", self.auto_throttle_off)
-            if self.have_fram:
-                self.fram.write(2, self.auto_throttle_off)
-        elif axis_val > 0 and self.auto_throttle_off < 1.0:
-            self.auto_throttle_off = round(self.auto_throttle_off + 0.1, 1)
-            print("auto_throttle_off", self.auto_throttle_off)
-            if self.have_fram:
-                self.fram.write(2, self.auto_throttle_off)
-
-
     def toggle_manual_recording(self):
         '''
         toggle recording on/off
@@ -476,7 +463,6 @@ class JoystickController(object):
         print('disp_sw_toggle:', self.disp_on)
 
 
-    '''
     def esc_sw_on(self):
         self.esc_on = True
         print('esc_on:', self.esc_on)
@@ -485,7 +471,6 @@ class JoystickController(object):
     def esc_sw_off(self):
         self.esc_on = False
         print('esc_on:', self.esc_on)
-    '''
 
 
     def esc_sw_toggle(self):
@@ -586,12 +571,21 @@ class TTUJoystickController(JoystickController):
 
         GPIO.setmode(GPIO.BOARD)
 
+        self.gpio_pin_buzzer = 36 #GPIO20
+        GPIO.setup(self.gpio_pin_buzzer, GPIO.OUT)
+        GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
+
         self.gpio_pin_esc_on = 16 #GPIO23 22 #GPIO25
         GPIO.setup(self.gpio_pin_esc_on, GPIO.OUT)
         GPIO.output(self.gpio_pin_esc_on, GPIO.LOW)
 
+        self.gpio_pin_fpga_reset = 12
+        GPIO.setup(self.gpio_pin_fpga_reset, GPIO.OUT)
+        GPIO.output(self.gpio_pin_fpga_reset, GPIO.HIGH)
+
         self.gpio_pin_bec_in = 38 #GPIO20
         GPIO.setup(self.gpio_pin_bec_in, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self.becst = 0
 
         gpio_pin_int = 40
         GPIO.setup(gpio_pin_int, GPIO.IN, GPIO.PUD_DOWN)
@@ -599,35 +593,42 @@ class TTUJoystickController(JoystickController):
         GPIO.add_event_callback(gpio_pin_int, self.callback)
 
     def callback(self, channel):
+        GPIO.setmode(GPIO.BOARD)
         if self.esc_on:
-            GPIO.output(self.gpio_pin_esc_on, GPIO.HIGH)
+            if self.becst == 0:
+                GPIO.output(self.gpio_pin_esc_on, GPIO.HIGH)
+                if GPIO.input(self.gpio_pin_bec_in):
+                    print("bec off")
+                    GPIO.output(self.gpio_pin_esc_on, GPIO.LOW)
+                    self.becst = 1
+            else:
+                GPIO.output(self.gpio_pin_esc_on, GPIO.HIGH)
+                self.becst = self.becst + 1
+                if self.becst == 10:
+                    self.becst = 0
         else:
             GPIO.output(self.gpio_pin_esc_on, GPIO.LOW)
+            self.becst = 0
 
         self.ch1, self.ch2, self.ch3, self.ch4 = self.spi.run(self.esc_on)
 
-        pwm_mid = 1520
-        pwm_sub = 500
-        pwm_min = pwm_mid - 500
-        pwm_max = pwm_mid + 500
+        pwm_mid = 1540
+        pwm_sub = 430
+        pwm_min = pwm_mid - pwm_sub
+        pwm_max = pwm_mid + pwm_sub
 
         if self.ch1 > pwm_min and self.ch1 < pwm_max:
-            self.angle = (self.ch1 - pwm_mid)/pwm_sub
-        self.set_steering(self.angle)
+            self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
+            self.set_steering(self.angle)
 
         if self.ch2 > pwm_min and self.ch2 < pwm_max:
-            self.throttle = (self.ch2 - pwm_mid)/pwm_sub
+            self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
+            self.set_throttle(self.throttle)
 
-        if self.constant_throttle == True:
-            if self.throttle > 0.1:
-                self.constant_throttle = False
-            else:
-                self.throttle = self.throttle_scale
-
-        self.set_throttle(self.throttle)
-
-        if self.ch4 != 0:
-            self.ch4 = 60 * 1000000 // self.ch4
+        #if self.ch4 != 0:
+        #    self.ch4 = 60 * 1000000 // self.ch4
+        self.ch3 = self.ch1
+        self.ch4 = self.ch2
 
 
     def init_js(self):
@@ -659,18 +660,6 @@ class TTUJoystickController(JoystickController):
         print("ai_throttle_mult", self.ai_throttle_mult)
         if self.have_fram:
             self.fram.write(1, self.ai_throttle_mult)
-
-    def decrease_auto_throttle_off(self):
-        self.auto_throttle_off = round(self.auto_throttle_off - 0.1, 1)
-        print("auto_throttle_off", self.auto_throttle_off)
-        if self.have_fram:
-            self.fram.write(2, self.auto_throttle_off)
-
-    def inclease_auto_throttle_off(self):
-        self.auto_throttle_off = round(self.auto_throttle_off + 0.1, 1)
-        print("auto_throttle_off", self.auto_throttle_off)
-        if self.have_fram:
-            self.fram.write(2, self.auto_throttle_off)
 
     def ft230x(self, dev_rc, name, q):
         import pigpio
@@ -740,22 +729,28 @@ class TTUJoystickController(JoystickController):
         threading.Thread(target=self.ft230x, args=('/dev/tty-psoc',9,q)).start()
         while True:
             d = q.get()
-            print(d,type(d))
+            #print(d,type(d))
+            bz = True
             if (d[0] == 1):
                 if(d[1] == 0):
                     self.lat1 = False
                 elif(d[1] == 1):
                     self.lat1 = True
                 elif(d[6] == 115 and d[7] == 0): #[+]
-                    self.esc_sw_toggle()
+                    self.esc_sw_on()
                 elif(d[6] == 165 and d[7] == 0): #[<]
-                    self.toggle_mode()
+                    self.esc_sw_off()
                 elif(d[6] == 163 and d[7] == 0): #[>]
-                    self.toggle_manual_recording()
+                    self.auto_record_on_throttle = True
+                    self.recording = False
+                    #self.recording = True
+                    print('auto_record_on_throttle:', self.auto_record_on_throttle)
                 elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.toggle_constant_throttle()
-                '''
+                    self.auto_record_on_throttle = False
+                    self.recording = False
+                    print('auto_record_on_throttle:', self.auto_record_on_throttle)
                 elif(d[6] == 164 and d[7] == 0): #[||]
+                    '''
                     self.esc_on = False
                     self.auto_record_on_throttle = False
                     self.recording = False
@@ -763,26 +758,29 @@ class TTUJoystickController(JoystickController):
                     self.constant_throttle = False
                     self.throttle = 0
                     self.on_throttle_changes()
-                '''
+                    '''
+                else:
+                    bz = False
 
             elif (d[0] == 2):
                 if(d[1] == 0):
                     self.lat2 = False
                 elif(d[1] == 1):
                     self.lat2 = True
-                '''
                 elif(d[6] == 115 and d[7] == 0): #[+]
-                    if abs(self.throttle) < 0.1:
-                        self.mode = 'local_angle'
+                    self.mode = 'local_angle'
                 elif(d[6] == 165 and d[7] == 0): #[<]
                     self.mode = 'local'
                 elif(d[6] == 163 and d[7] == 0): #[>]
                     self.toggle_constant_throttle()
                 elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.toggle_constant_throttle()
-                elif(d[6] == 164 and d[7] == 0): #[||]
                     self.mode = 'user'
-                '''
+                elif(d[6] == 164 and d[7] == 0): #[||]
+                    '''
+                    self.mode = 'user'
+                    '''
+                else:
+                    bz = False
 
             elif (d[0] == 3):
                 if(d[1] == 0):
@@ -797,6 +795,8 @@ class TTUJoystickController(JoystickController):
                     self.inclease_ai_throttle_mult()
                 elif(d[6] == 114 and d[7] == 0): #[-]
                     self.decrease_ai_throttle_mult()
+                else:
+                    bz = False
 
             elif ((d[0] == 9 and d[2] == bytearray(b'0\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0x301)): #POWER,Å†
                 self.esc_sw_toggle()
@@ -821,3 +821,10 @@ class TTUJoystickController(JoystickController):
                 self.sw_l3_toggle()
             elif ((d[0] == 9 and d[2] == bytearray(b'10\r\n'))): #1
                 self.sw_r3_toggle()
+            else:
+                bz = False
+
+            if bz:
+                GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
+                time.sleep(0.1)
+                GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)

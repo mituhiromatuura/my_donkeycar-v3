@@ -1,4 +1,5 @@
 import moviepy.editor as mpy
+'''
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 
@@ -10,6 +11,7 @@ try:
     from vis.optimizer import Optimizer
 except:
     raise Exception("Please install keras-vis: pip install git+https://github.com/autorope/keras-vis.git")
+'''
 
 import donkeycar as dk
 from donkeycar.parts.datastore import Tub
@@ -86,6 +88,12 @@ class MakeMovie(object):
         user_angle = float(record["user/angle"])
         user_throttle = float(record["user/throttle"])
 
+        if record["user/mode"] == "local_angle":
+            user_angle = float(record["pilot/angle"])
+        elif record["user/mode"] == "local":
+            user_angle = float(record["pilot/angle"])
+            user_throttle = float(record["pilot/throttle"])
+
         height, width, _ = img.shape
 
         length = height
@@ -100,6 +108,13 @@ class MakeMovie(object):
 
         # user is green, pilot is blue
         cv2.line(img, p1, p11, (0, 255, 0), 2)
+
+        textFontFace = cv2.FONT_HERSHEY_SIMPLEX
+        textFontScale = 0.4
+        textColor = (255,255,255)
+        textThickness = 1
+        cv2.putText(img, record["user/mode"],(0,9),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
         
     def draw_model_prediction(self, record, img):
         '''

@@ -14,6 +14,7 @@ import random
 import glob
 import numpy as np
 import pandas as pd
+import concurrent.futures
 
 from PIL import Image
 
@@ -95,6 +96,9 @@ class Tub(object):
                   "to create a new tub. Please check your tub path or provide meta info to create a new tub."
 
             raise AttributeError(msg)
+
+        executor = concurrent.futures.ProcessPoolExecutor(max_workers=3)
+        #executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
     def get_last_ix(self):
         index = self.get_index()           
@@ -221,7 +225,8 @@ class Tub(object):
 
             elif typ is 'image':
                 path = self.make_file_path(key)
-                val.save(path)
+                #val.save(path)
+                executor.submit(val.save, pathv)
                 json_data[key]=path
 
             elif typ == 'image_array':
@@ -433,9 +438,17 @@ class Tub(object):
         return train_gen, val_gen
 
 
+import RPi.GPIO as GPIO
+
 class TubWriter(Tub):
     def __init__(self, *args, **kwargs):
         super(TubWriter, self).__init__(*args, **kwargs)
+
+        self.enable = True
+        self.pin = 29 #GPIO5
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.pin, GPIO.OUT)
+        GPIO.output(self.pin, GPIO.HIGH)
 
     def run(self, *args):
         """
@@ -444,7 +457,17 @@ class TubWriter(Tub):
         """
         assert len(self.inputs) == len(args)
         record = dict(zip(self.inputs, args))
-        self.put_record(record)
+
+        if self.enable:
+            try:
+                GPIO.output(self.pin, GPIO.LOW)
+                self.put_record(record)
+                GPIO.output(self.pin, GPIO.HIGH)
+            except:
+                print("TubWriter : except")
+                self.enable = False
+                GPIO.output(self.pin, GPIO.HIGH)
+
         return self.current_ix
 
 
@@ -487,7 +510,8 @@ class TubHandler:
         tub_num = self.next_tub_number(self.path)
         date = datetime.datetime.now().strftime('%y-%m-%d')
         name = '_'.join(['tub', str(tub_num), date])
-        tub_path = os.path.join(self.path, name)
+        #tub_path = os.path.join(self.path, name)
+        tub_path = os.path.join(self.path, 'tub')
         return tub_path
 
     def new_tub_writer(self, inputs, types, user_meta=[]):
