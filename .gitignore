@@ -1,0 +1,10 @@
+donkeycar.egg-info/
+donkeycar/__pycache__/
+donkeycar/contrib/__pycache__/
+donkeycar/management/__pycache__/
+donkeycar/parts/__pycache__/
+donkeycar/parts/web_controller/__pycache__/
+mycar/.auto_tpu-aug.sh
+mycar/.updown.sh
+mycar/logs/
+mycar/models/
