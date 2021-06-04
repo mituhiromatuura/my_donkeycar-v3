@@ -29,7 +29,8 @@ echo -n > $DOUBLE
 #hostname="mbp2008"
 hostname="mba2010"
 #ramdisk="RamDisk_1G"
-ramdisk="RamDisk_2G"
+#ramdisk="RamDisk_2G"
+ramdisk="RamDisk"
 
 TUB=/run/shm/mycar/data/tub
 
