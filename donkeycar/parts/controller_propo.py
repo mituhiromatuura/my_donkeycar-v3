@@ -612,7 +612,7 @@ class TTUJoystickController(JoystickController):
 
         self.ch1, self.ch2, self.ch3, self.ch4 = self.spi.run(self.esc_on)
 
-        pwm_mid = 1540
+        pwm_mid = 1530
         pwm_sub = 430
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
@@ -620,6 +620,11 @@ class TTUJoystickController(JoystickController):
         if self.ch1 > pwm_min and self.ch1 < pwm_max:
             self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
             self.set_steering(self.angle)
+
+        pwm_mid = 1530
+        pwm_sub = 430
+        pwm_min = pwm_mid - pwm_sub
+        pwm_max = pwm_mid + pwm_sub
 
         if self.ch2 > pwm_min and self.ch2 < pwm_max:
             self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
@@ -750,15 +755,13 @@ class TTUJoystickController(JoystickController):
                     self.recording = False
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
                 elif(d[6] == 164 and d[7] == 0): #[||]
-                    '''
-                    self.esc_on = False
+                    self.esc_sw_off()
                     self.auto_record_on_throttle = False
                     self.recording = False
                     self.mode = 'user'
                     self.constant_throttle = False
                     self.throttle = 0
                     self.on_throttle_changes()
-                    '''
                 else:
                     bz = False
 
