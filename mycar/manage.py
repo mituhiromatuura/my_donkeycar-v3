@@ -347,33 +347,39 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         from donkeycar.parts.ads1115 import Ads1115
         V.add(Ads1115(0x4b), outputs=['dist0','dist1','dist2','dist3'], threaded=True)
 
+    #PsocAdc
+    if cfg.HAVE_PSOC_ADC:
+        from donkeycar.parts.psoc_adc import PsocAdc
+        V.add(PsocAdc(0x4b), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6'], threaded=True)
+
     #LAMP
-    from donkeycar.parts.lamp import LedCtrl
-    V.add(LedCtrl(cfg), inputs = ['user/mode', 'user/throttle', 'auto_record_on_throttle', 'constant_throttle', 'esc_on'],
-        outputs = ['led/head', 'led/tail', 'led/left', 'led/right', 'led/blue', 'led/green'])
+    if cfg.DRIVE_TRAIN_TYPE != "SERVO_ESC":
+        from donkeycar.parts.lamp import LedCtrl
+        V.add(LedCtrl(cfg), inputs = ['user/mode', 'user/throttle', 'auto_record_on_throttle', 'constant_throttle', 'esc_on'],
+            outputs = ['led/head', 'led/tail', 'led/left', 'led/right', 'led/blue', 'led/green'])
 
-    from donkeycar.parts.led_pca9685 import LED
-    V.add(LED(), inputs=[
-        'led/head',
-        'led/left',
-        'led/right',
-        'led/head',
+        from donkeycar.parts.led_pca9685 import LED
+        V.add(LED(), inputs=[
+            'led/head',
+            'led/left',
+            'led/right',
+            'led/head',
 
-        'led/head',
-        'led/head',
+            'led/head',
+            'led/head',
 
-        'led/head', #red out
-        'led/green', #green
-        'led/blue', #blue
-        'led/left', #yerrow
-        'led/tail', #red in
+            'led/head', #red out
+            'led/green', #green
+            'led/blue', #blue
+            'led/left', #yerrow
+            'led/tail', #red in
 
-        'led/tail', #red in
-        'led/right', #yerrow
-        'led/blue', #blue
-        'led/green', #green
-        'led/head'], #red out
-        threaded=True)
+            'led/tail', #red in
+            'led/right', #yerrow
+            'led/blue', #blue
+            'led/green', #green
+            'led/head'], #red out
+            threaded=True)
 
     class ImgPreProcess():
         '''
@@ -511,7 +517,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     class DriveMode:
         def run(self, mode,
                     user_angle, user_throttle,
-                    pilot_angle, pilot_throttle):
+                    pilot_angle, pilot_throttle,
+                    dist0,dist1,dist2,dist3,dist4,dist5,dist6):
             if mode == 'user':
                 return user_angle, user_throttle
 
@@ -519,11 +526,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 return pilot_angle if pilot_angle else 0.0, user_throttle
 
             else:
+                if cfg.HAVE_PSOC_ADC:
+                    if dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5:
+                        pilot_throttle = 0
                 return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
-                  'pilot/angle', 'pilot/throttle'],
+                  'pilot/angle', 'pilot/throttle',
+                  'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6'],
           outputs=['angle', 'throttle'])
 
 
@@ -689,6 +700,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inputs += ['dist0', 'dist1', 'dist2', 'dist3']
         types  += ['float', 'float', 'float', 'float']
 
+    if cfg.HAVE_PSOC_ADC:
+        inputs += ['dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6']
+        types  += ['float', 'float', 'float', 'float', 'float', 'float', 'float']
+
     if cfg.HAVE_REVCOUNT:
         inputs += ['ch3','ch4']
         types  += ['int','int']
@@ -748,6 +763,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'dist1',
                 'dist2',
                 'dist3',
+                'dist4',
+                'dist5',
+                'dist6',
                 'pwmcount',
                 'recording',
                 'auto_record_on_throttle',
