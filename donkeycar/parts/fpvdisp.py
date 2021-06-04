@@ -71,6 +71,9 @@ class FPVDisp:
         dist1,
         dist2,
         dist3,
+        dist4,
+        dist5,
+        dist6,
         pwmcount,
         recording,
         auto_record_on_throttle,
@@ -109,6 +112,9 @@ class FPVDisp:
         self.dist1 = dist1
         self.dist2 = dist2
         self.dist3 = dist3
+        self.dist4 = dist4
+        self.dist5 = dist5
+        self.dist6 = dist6
         self.pwmcount = pwmcount
         self.recording = recording
         self.auto_record_on_throttle = auto_record_on_throttle
@@ -146,6 +152,9 @@ class FPVDisp:
         dist1,
         dist2,
         dist3,
+        dist4,
+        dist5,
+        dist6,
         pwmcount,
         recording,
         auto_record_on_throttle,
@@ -182,6 +191,9 @@ class FPVDisp:
         self.dist1 = dist1
         self.dist2 = dist2
         self.dist3 = dist3
+        self.dist4 = dist4
+        self.dist5 = dist5
+        self.dist6 = dist6
         self.pwmcount = pwmcount
         self.recording = recording
         self.auto_record_on_throttle = auto_record_on_throttle
@@ -372,6 +384,15 @@ class FPVDisp:
             cv2.circle(img,(wwidth//4*1,wheight//2),int(self.dist2*40),(0,255,0),1)
             cv2.circle(img,(wwidth//4*2,wheight//2),int(self.dist0*40),(0,255,0),1)
             cv2.circle(img,(wwidth//4*3,wheight//2),int(self.dist1*40),(0,255,0),1)
+
+        if self.cfg.HAVE_PSOC_ADC:
+            cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*1,wheight//4*2),int(self.dist1*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*3,wheight//4*2),int(self.dist2*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*1,wheight//4*3),int(self.dist3*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*3,wheight//4*3),int(self.dist4*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),(0,255,0),1)
+            cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),(0,255,0),1)
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red
