@@ -386,13 +386,27 @@ class FPVDisp:
             cv2.circle(img,(wwidth//4*3,wheight//2),int(self.dist1*40),(0,255,0),1)
 
         if self.cfg.HAVE_PSOC_ADC:
-            cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*1,wheight//4*2),int(self.dist1*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*3,wheight//4*2),int(self.dist2*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*1,wheight//4*3),int(self.dist3*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*3,wheight//4*3),int(self.dist4*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),(0,255,0),1)
-            cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),(0,255,0),1)
+            def circleColor(dist):
+                if dist < 0.7:
+                    return (0,255,0)
+                else:
+                    return (255,0,0)
+
+            cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),circleColor(self.dist0),1)
+            cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),circleColor(self.dist1),1)
+            cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),circleColor(self.dist2),1)
+            cv2.circle(img,(wwidth//6*2,wheight//4*3),int(self.dist3*40),circleColor(self.dist3),1)
+            cv2.circle(img,(wwidth//6*4,wheight//4*3),int(self.dist4*40),circleColor(self.dist4),1)
+            cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),circleColor(self.dist5),1)
+            cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),circleColor(self.dist6),1)
+
+            cv2.putText(img,"0",(wwidth//4*2,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"1",(wwidth//6*1,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"2",(wwidth//6*5,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"3",(wwidth//6*2,wheight//4*3),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"4",(wwidth//6*4,wheight//4*3),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"5",(wwidth//4*1,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"6",(wwidth//4*3,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red

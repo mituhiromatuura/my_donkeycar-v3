@@ -727,11 +727,9 @@ class TTUJoystickController(JoystickController):
 
     def update(self):
         q = queue.Queue()
-        threading.Thread(target=self.jsx, args=('/dev/input/js0',0,q)).start()
         threading.Thread(target=self.lat, args=('/dev/LAT-RC01-1',1,q)).start()
         threading.Thread(target=self.lat, args=('/dev/LAT-RC01-2',2,q)).start()
         threading.Thread(target=self.lat, args=('/dev/LAT-RC01-3',3,q)).start()
-        threading.Thread(target=self.ft230x, args=('/dev/tty-psoc',9,q)).start()
         while True:
             d = q.get()
             #print(d,type(d))
@@ -801,29 +799,6 @@ class TTUJoystickController(JoystickController):
                 else:
                     bz = False
 
-            elif ((d[0] == 9 and d[2] == bytearray(b'0\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0x301)): #POWER,Å†
-                self.esc_sw_toggle()
-            elif ((d[0] == 9 and d[2] == bytearray(b'1\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0xc01)): #VOL+,R3
-                self.toggle_constant_throttle()
-            elif ((d[0] == 9 and d[2] == bytearray(b'2\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0x101)): #FUNC/STOP,ÅZ
-                self.toggle_manual_recording()
-            elif ((d[0] == 9 and d[2] == bytearray(b'4\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0xb01)): #<<,L3
-                self.toggle_mode()
-
-            elif ((d[0] == 9 and d[2] == bytearray(b'6\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0x201)): #>>,Å¢
-                self.increase_max_throttle_10()
-            elif ((d[0] == 9 and d[2] == bytearray(b'5\r\n')) or (d[0] == 0 and d[3] == 1 and d[4] == 0x001)): #>,Çw
-                self.decrease_max_throttle_10()
-
-            elif ((d[0] == 9 and d[2] == bytearray(b'A\r\n')) or (d[0] == 0 and d[3] == -32767 and d[4] == 0x702)): #Å¢,Å™
-                self.inclease_ai_throttle_mult()
-            elif ((d[0] == 9 and d[2] == bytearray(b'9\r\n')) or (d[0] == 0 and d[3] == 32767 and d[4] == 0x702)): #VOL-,Å´
-                self.decrease_ai_throttle_mult()
-
-            elif ((d[0] == 9 and d[2] == bytearray(b'C\r\n'))): #0
-                self.sw_l3_toggle()
-            elif ((d[0] == 9 and d[2] == bytearray(b'10\r\n'))): #1
-                self.sw_r3_toggle()
             else:
                 bz = False
 

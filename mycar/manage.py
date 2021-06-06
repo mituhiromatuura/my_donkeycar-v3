@@ -527,8 +527,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
             else:
                 if cfg.HAVE_PSOC_ADC:
-                    if dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5 or dist0 > 0.5:
+                    if dist0 > 0.7 or dist1 > 0.7 or dist2 > 0.7 or dist3 > 0.7 or dist4 > 0.7 or dist5 > 0.7 or dist6 > 0.7:
                         pilot_throttle = 0
+                    if dist1 > 0.5 or dist3 > 0.5 or dist5 > 0.5:
+                        pilot_angle = pilot_angle + 0.5
+                    if dist2 > 0.5 or dist4 > 0.5 or dist4 > 0.5:
+                        pilot_angle = pilot_angle - 0.5
                 return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
 
     V.add(DriveMode(),
