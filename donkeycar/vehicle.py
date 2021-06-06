@@ -54,6 +54,9 @@ class PartProfiler:
             row += ["%.2f" % (np.percentile(arr, p) * 1000) for p in pctile]
             pt.add_row(row)
         print(pt)
+        f = open("/run/shm/mycar/data/report.txt","w")
+        f.write(str(pt))
+        f.close()
 
 
 class Vehicle:
