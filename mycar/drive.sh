@@ -43,6 +43,9 @@ mkdir /run/shm/mycar/data
 rm ./models/*.png
 sudo pigpiod
 
+vcgencmd measure_clock arm
+vcgencmd measure_temp
+
 if [ $1 != "a" ]; then
   #python manage.py drive $1
   python manage.py drive --js
@@ -53,12 +56,15 @@ fi
 sudo killall -9 pigpiod
 sudo rm -rf /var/run/pigpio.pid
 
+vcgencmd measure_clock arm
+vcgencmd measure_temp
+
 read -p "Hit enter: sudo zip"
 
 cp config.py /run/shm/mycar/
 cp myconfig.py /run/shm/mycar/
 if [ $1 = "a" ]; then
-  cp -r ~./models /run/shm/mycar/
+  cp -r ./models /run/shm/mycar/
 fi
 
 ymdhm=`date "+%Y%m%d%H%M"`
@@ -68,13 +74,15 @@ if [ ! -e $LOGS ]; then
     LOGS="./logs"
 fi
 
+pushd /run/shm
 if [ $1 != "a" ]; then
-  sudo zip -rq $LOGS/log_${ymdhm}_drive.zip /run/shm/mycar/
+  sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
   sudo chown pi:pi $LOGS/log_${ymdhm}_drive.zip
 else
-  sudo zip -rq $LOGS/log_${ymdhm}_auto.zip /run/shm/mycar/
+  sudo zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
   sudo chown pi:pi $LOGS/log_${ymdhm}_auto.zip
 fi
+popd
 
 read -p "Hit enter: rsync *.json"
 rsync -rtv --delete $TUB/*.json work@$hostname.local:/Volumes/$ramdisk/data/
