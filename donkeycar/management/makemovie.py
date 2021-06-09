@@ -115,6 +115,31 @@ class MakeMovie(object):
         textThickness = 1
         cv2.putText(img, record["user/mode"],(0,9),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
+
+        if self.cfg.HAVE_PSOC_ADC:
+            def circleColor(dist):
+                if dist < self.cfg.ADC_COUNTER:
+                    return (0,255,0)
+                elif dist < self.cfg.ADC_BRAKE:
+                    return (255,255,0)
+                else:
+                    return (255,0,0)
+
+            dist0 = float(record["dist0"])
+            dist1 = float(record["dist1"])
+            dist2 = float(record["dist2"])
+            dist3 = float(record["dist3"])
+            dist4 = float(record["dist4"])
+            dist5 = float(record["dist5"])
+            dist6 = float(record["dist6"])
+
+            cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
+            cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist1),1)
+            cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist2),1)
+            cv2.circle(img,(width//6*2,height//4*3),int(dist3*40),circleColor(dist3),1)
+            cv2.circle(img,(width//6*4,height//4*3),int(dist4*40),circleColor(dist4),1)
+            cv2.circle(img,(width//4*1,height//4*1),int(dist5*40),circleColor(dist5),1)
+            cv2.circle(img,(width//4*3,height//4*1),int(dist6*40),circleColor(dist6),1)
         
     def draw_model_prediction(self, record, img):
         '''
