@@ -337,9 +337,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #INA226
     if cfg.HAVE_INA226:
         from donkeycar.parts.ina226 import Ina226
-        ina226_a = Ina226(0x48)
+        ina226_a = Ina226(0x48,(1000//30)/1000)
         V.add(ina226_a, outputs=['volt_a'], threaded=True)
-        ina226_b = Ina226(0x49)
+        ina226_b = Ina226(0x49,(1000//30)/1000)
         V.add(ina226_b, outputs=['volt_b'], threaded=True)
 
     #ADS1115
