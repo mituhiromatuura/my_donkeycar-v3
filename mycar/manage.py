@@ -520,6 +520,14 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     pilot_angle, pilot_throttle,
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6):
             if mode == 'user':
+                if cfg.HAVE_PSOC_ADC:
+                    if user_throttle > 0:
+                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.ADC_BRAKE:
+                            user_throttle = user_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
+                    if max([dist1,dist3,dist5]) > cfg.ADC_COUNTER:
+                        user_angle = user_angle + max([dist1,dist3,dist5])
+                    if max([dist2,dist4,dist4]) > cfg.ADC_COUNTER:
+                        user_angle = user_angle - max([dist2,dist4,dist4])
                 return user_angle, user_throttle
 
             elif mode == 'local_angle':
@@ -527,12 +535,13 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
             else:
                 if cfg.HAVE_PSOC_ADC:
-                    if dist0 > 0.7 or dist1 > 0.7 or dist2 > 0.7 or dist3 > 0.7 or dist4 > 0.7 or dist5 > 0.7 or dist6 > 0.7:
-                        pilot_throttle = 0
-                    if dist1 > 0.5 or dist3 > 0.5 or dist5 > 0.5:
-                        pilot_angle = pilot_angle + 0.5
-                    if dist2 > 0.5 or dist4 > 0.5 or dist4 > 0.5:
-                        pilot_angle = pilot_angle - 0.5
+                    if pilot_throttle > 0:
+                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.ADC_BRAKE:
+                            pilot_throttle = pilot_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
+                        if max([dist1,dist3,dist5]) > cfg.ADC_COUNTER:
+                            pilot_angle = pilot_angle + max([dist1,dist3,dist5])
+                        if max([dist2,dist4,dist4]) > cfg.ADC_COUNTER:
+                            pilot_angle = pilot_angle - max([dist2,dist4,dist4])
                 return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
 
     V.add(DriveMode(),
@@ -789,6 +798,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             ],
             threaded=True
         )
+
+    if cfg.HAVE_BUZZER:
+        from donkeycar.parts.buzzer import BUZZER
+        V.add(BUZZER(cfg), inputs=['tub/num_records'])
 
     #run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
