@@ -172,51 +172,53 @@ class FPVDisp:
         lat3,
         period_time):
 
-        self.mode = mode
-        self.image = image
-        self.angle = angle
-        self.throttle = throttle
-        self.spi_angle = spi_angle
-        self.spi_throttle = spi_throttle
-        self.spi_revcount = spi_revcount
-        self.imu_acl_x = imu_acl_x
-        self.imu_acl_y = imu_acl_y
-        self.imu_acl_z = imu_acl_z
-        self.imu_gyr_x = imu_gyr_x
-        self.imu_gyr_y = imu_gyr_y
-        self.imu_gyr_z = imu_gyr_z
-        self.volt_a = volt_a
-        self.volt_b = volt_b
-        self.dist0 = dist0
-        self.dist1 = dist1
-        self.dist2 = dist2
-        self.dist3 = dist3
-        self.dist4 = dist4
-        self.dist5 = dist5
-        self.dist6 = dist6
-        self.pwmcount = pwmcount
-        self.recording = recording
-        self.auto_record_on_throttle = auto_record_on_throttle
-        self.constant_throttle = constant_throttle
-        self.throttle_scale = throttle_scale
-        self.ai_throttle_mult = ai_throttle_mult
-        self.disp_on = disp_on
-        self.sw_l3 = sw_l3,
-        self.sw_r3 = sw_r3,
-        self.esc_on = esc_on
-        self.stop = stop
-        self.num_records = num_records
-        self.lat1 = lat1
-        self,lat2 = lat2
-        self,lat3 = lat3
-        self.period_time = period_time
+        if self.on:
+            self.mode = mode
+            self.image = image
+            self.angle = angle
+            self.throttle = throttle
+            self.spi_angle = spi_angle
+            self.spi_throttle = spi_throttle
+            self.spi_revcount = spi_revcount
+            self.imu_acl_x = imu_acl_x
+            self.imu_acl_y = imu_acl_y
+            self.imu_acl_z = imu_acl_z
+            self.imu_gyr_x = imu_gyr_x
+            self.imu_gyr_y = imu_gyr_y
+            self.imu_gyr_z = imu_gyr_z
+            self.volt_a = volt_a
+            self.volt_b = volt_b
+            self.dist0 = dist0
+            self.dist1 = dist1
+            self.dist2 = dist2
+            self.dist3 = dist3
+            self.dist4 = dist4
+            self.dist5 = dist5
+            self.dist6 = dist6
+            self.pwmcount = pwmcount
+            self.recording = recording
+            self.auto_record_on_throttle = auto_record_on_throttle
+            self.constant_throttle = constant_throttle
+            self.throttle_scale = throttle_scale
+            self.ai_throttle_mult = ai_throttle_mult
+            self.disp_on = disp_on
+            self.sw_l3 = sw_l3,
+            self.sw_r3 = sw_r3,
+            self.esc_on = esc_on
+            self.stop = stop
+            self.num_records = num_records
+            self.lat1 = lat1
+            self.lat2 = lat2
+            self.lat3 = lat3
+            self.period_time = period_time
 
-        self.executor.submit(self.disp_main())
+            self.executor.submit(self.disp_main())
 
     def update(self):
         while self.on:
             if self.executor_on == True:
                 self.executor.submit(self.disp_main())
+                time.sleep((1000//30/1000))
 
     def disp_main(self):
         if self.constant_throttle:
@@ -237,11 +239,14 @@ class FPVDisp:
                 GPIO.output(self.gpio_pin_local_angle, self.led_on)
                 GPIO.output(self.gpio_pin_local, self.led_off)
             elif self.mode == 'local':
-                GPIO.output(self.gpio_pin_local_angle, self.led_off)
+                GPIO.output(self.gpio_pin_local_angle, self.led_on)
                 GPIO.output(self.gpio_pin_local, self.led_on)
 
-        #if self.mode != "user":
-        #    return
+        if not self.cfg.FPVDISP_REC:
+            if self.recording:
+                if self.num_records % 1000 == 0:
+                    print(self.num_records)
+                return
 
         cv2.namedWindow('DonkeyCamera', cv2.WINDOW_NORMAL)
         #cv2.namedWindow('DonkeyCamera', cv2.WINDOW_AUTOSIZE)
@@ -387,8 +392,10 @@ class FPVDisp:
 
         if self.cfg.HAVE_PSOC_ADC:
             def circleColor(dist):
-                if dist < 0.7:
+                if dist < self.cfg.ADC_COUNTER:
                     return (0,255,0)
+                elif dist < self.cfg.ADC_BRAKE:
+                    return (255,255,0)
                 else:
                     return (255,0,0)
 
@@ -400,6 +407,7 @@ class FPVDisp:
             cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),circleColor(self.dist5),1)
             cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),circleColor(self.dist6),1)
 
+            '''
             cv2.putText(img,"0",(wwidth//4*2,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"1",(wwidth//6*1,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"2",(wwidth//6*5,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
@@ -407,6 +415,7 @@ class FPVDisp:
             cv2.putText(img,"4",(wwidth//6*4,wheight//4*3),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"5",(wwidth//4*1,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"6",(wwidth//4*3,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
+            '''
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red
