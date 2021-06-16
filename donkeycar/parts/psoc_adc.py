@@ -28,9 +28,12 @@ class PsocAdc:
         config = 0x8583 + (ch<<12)
         try:
             self.i2c.write_word_data(self.addr, 1, self.swap(config))
-            time.sleep(0.005)
             result = self.i2c.read_word_data(self.addr, 0) & 0xFFFF
             return self.swap(result)
+        except KeyboardInterrupt:
+            self.on = False
+            print("KeyboardInterrupt:PsocAdc")
+            return 0
         except:
             print('failed to read PsocAdc!!')
             return 0
@@ -48,7 +51,8 @@ class PsocAdc:
         return self.ad0, self.ad1, self.ad2, self.ad3, self.ad4, self.ad5, self.ad6
 
     def run(self):
-        self.poll()
+        if self.on:
+            self.poll()
         return self.ad0, self.ad1, self.ad2, self.ad3, self.ad4, self.ad5, self.ad6
 
     def shutdown(self):
