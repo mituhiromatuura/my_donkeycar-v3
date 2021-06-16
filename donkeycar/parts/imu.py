@@ -78,6 +78,9 @@ class IMU:
                 self.gyro = { 'x' : ret[4], 'y' : ret[5], 'z' : ret[6] }
                 self.mag = { 'x' : ret[13], 'y' : ret[14], 'z' : ret[15] }
                 self.temp = ret[16]
+        except KeyboardInterrupt:
+            self.on = False
+            print("KeyboardInterrupt:IMU")
         except:
             print('failed to read imu!!')
             
@@ -85,7 +88,8 @@ class IMU:
         return self.accel['x'], self.accel['y'], self.accel['z'], self.gyro['x'], self.gyro['y'], self.gyro['z'], self.temp
 
     def run(self):
-        self.poll()
+        if self.on:
+            self.poll()
         return self.accel['x'], self.accel['y'], self.accel['z'], self.gyro['x'], self.gyro['y'], self.gyro['z'], self.temp
 
     def shutdown(self):
