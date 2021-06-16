@@ -19,6 +19,9 @@ class Ina226:
             word = self.i2c.read_word_data(self.addr, 0x02) & 0xFFFF
             result = ((word << 8) & 0xFF00) + ((word >> 8) & 0x00FF)
             self.volt = result * 1.25 / 1000
+        except KeyboardInterrupt:
+            self.on = False
+            print("KeyboardInterrupt:Ina226")
         except:
             print('failed to read Ina226!!')
 
@@ -26,7 +29,8 @@ class Ina226:
         return self.volt
 
     def run(self):
-        self.poll()
+        if self.on:
+            self.poll()
         return self.volt
 
     def shutdown(self):
