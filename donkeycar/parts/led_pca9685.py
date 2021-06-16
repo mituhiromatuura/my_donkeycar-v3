@@ -68,6 +68,9 @@ class LED:
                     self.bus.write_byte_data(self.addr,reg_on_h,0x10)
                     self.bus.write_byte_data(self.addr,reg_off_h,0x00)
                     self.led_on[pin] = False
+        except KeyboardInterrupt:
+            self.on = False
+            print("KeyboardInterrupt:LED")
         except:
             self.dev_ok = False
             if pin == 0:
@@ -82,7 +85,8 @@ class LED:
         self.blink_rate = [p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15]
 
     def run(self, p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15):
-        self.blink_rate = [p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15]
+        if self.on:
+            self.blink_rate = [p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15]
         self.poll()
 
     def shutdown(self):
