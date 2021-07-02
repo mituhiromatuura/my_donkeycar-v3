@@ -61,16 +61,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #Initialize car
     V = dk.vehicle.Vehicle()
 
-    class PeriodTime:
-        def __init__(self):
-            self.time = time.time()
-
-        def run(self):
-            period = (time.time() - self.time) * 1000 # msec
-            self.time = time.time()
-            return period
-
-    V.add(PeriodTime(), outputs=['period_time'])
+    from donkeycar.parts.period_time import PeriodTime
+    V.add(PeriodTime(cfg), inputs=['user/mode'], outputs=['period_time'])
 
     print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
     if camera_type == "stereo":
@@ -334,23 +326,44 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(imu, outputs=['imu/acl_x', 'imu/acl_y', 'imu/acl_z',
             'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z'], threaded=True)
 
+    #AHRS
+    if cfg.HAVE_AHRS:
+        '''
+        from donkeycar.parts.mpu9250 import Mpu9250
+        V.add(Mpu9250('/dev/ttyMPU9250'), outputs=[
+            'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
+            'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z',
+            'imu/mag_x', 'imu/mag_y', 'imu/mag_z',
+            'imu/q_0', 'imu/q_x', 'imu/q_y', 'imu/q_z',
+            'imu/ypr_y', 'imu/ypr_p', 'imu/ypr_r'],
+            threaded=True)
+        '''
+        from donkeycar.parts.wt901c import Wt901c
+        V.add(Wt901c('/dev/ttyWt901c'), outputs=[
+            'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
+            'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z',
+            'imu/mag_x', 'imu/mag_y', 'imu/mag_z',
+            'imu/angle_x','imu/angle_y','imu/angle_z',
+            'imu/q_0', 'imu/q_1', 'imu/q_2', 'imu/q_3'],
+            threaded=True)
+
     #INA226
     if cfg.HAVE_INA226:
         from donkeycar.parts.ina226 import Ina226
         ina226_a = Ina226(0x48,(1000//30)/1000)
-        V.add(ina226_a, outputs=['volt_a'], threaded=True)
+        V.add(ina226_a, outputs=['volt_a']) #, threaded=True)
         ina226_b = Ina226(0x49,(1000//30)/1000)
-        V.add(ina226_b, outputs=['volt_b'], threaded=True)
+        V.add(ina226_b, outputs=['volt_b']) #, threaded=True)
 
     #ADS1115
     if cfg.HAVE_ADS1115:
         from donkeycar.parts.ads1115 import Ads1115
-        V.add(Ads1115(0x4b), outputs=['dist0','dist1','dist2','dist3'], threaded=True)
+        V.add(Ads1115(0x4b), outputs=['dist0','dist1','dist2','dist3']) #, threaded=True)
 
     #PsocAdc
     if cfg.HAVE_PSOC_ADC:
         from donkeycar.parts.psoc_adc import PsocAdc
-        V.add(PsocAdc(0x4b), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6'], threaded=True)
+        V.add(PsocAdc('/dev/ttyPsoc'), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6','dist7'], threaded=True)
 
     #LAMP
     if cfg.DRIVE_TRAIN_TYPE != "SERVO_ESC":
@@ -379,7 +392,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             'led/blue', #blue
             'led/green', #green
             'led/head'], #red out
-            threaded=True)
+            threaded=False) #True)
 
     class ImgPreProcess():
         '''
@@ -518,36 +531,41 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         def run(self, mode,
                     user_angle, user_throttle,
                     pilot_angle, pilot_throttle,
-                    dist0,dist1,dist2,dist3,dist4,dist5,dist6):
+                    dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
             if mode == 'user':
-                if cfg.HAVE_PSOC_ADC:
+                if False: #cfg.HAVE_PSOC_ADC:
                     if user_throttle > 0:
                         if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.ADC_BRAKE:
                             user_throttle = user_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
                     if max([dist1,dist3,dist5]) > cfg.ADC_COUNTER:
                         user_angle = user_angle + max([dist1,dist3,dist5])
-                    if max([dist2,dist4,dist4]) > cfg.ADC_COUNTER:
-                        user_angle = user_angle - max([dist2,dist4,dist4])
+                    if max([dist2,dist4,dist6]) > cfg.ADC_COUNTER:
+                        user_angle = user_angle - max([dist2,dist4,dist6])
                 return user_angle, user_throttle
 
             elif mode == 'local_angle':
                 return pilot_angle if pilot_angle else 0.0, user_throttle
 
             else:
-                if cfg.HAVE_PSOC_ADC:
-                    if pilot_throttle > 0:
-                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.ADC_BRAKE:
-                            pilot_throttle = pilot_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
-                        if max([dist1,dist3,dist5]) > cfg.ADC_COUNTER:
-                            pilot_angle = pilot_angle + max([dist1,dist3,dist5])
-                        if max([dist2,dist4,dist4]) > cfg.ADC_COUNTER:
-                            pilot_angle = pilot_angle - max([dist2,dist4,dist4])
+                try:
+                    if cfg.HAVE_PSOC_ADC:
+                        if pilot_throttle > 0:
+                            if max([dist0,dist3,dist4]) > cfg.ADC_BRAKE:
+                                pilot_throttle = pilot_throttle - max([dist0,dist3,dist4])
+                            if max([dist1,dist5]) > cfg.ADC_COUNTER:
+                                pilot_angle = pilot_angle + max([dist1,dist5])
+                            if max([dist2,dist6]) > cfg.ADC_COUNTER:
+                                pilot_angle = pilot_angle - max([dist2,dist6])
+                except:
+                    pass
+                if user_throttle > 0.9:
+                    return pilot_angle if pilot_angle else 0.0, -0.5
                 return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
                   'pilot/angle', 'pilot/throttle',
-                  'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6'],
+                  'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6', 'dist7'],
           outputs=['angle', 'throttle'])
 
 
@@ -656,18 +674,20 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
         from donkeycar.parts.actuator_pigpio import PWMSteering, PWMThrottle, PiGPIO_PWM
-        steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED)
+        steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED,
+                                         center=cfg.STEERING_CENTER_PWM)
         steering = PWMSteering(controller=steering_controller,
                                         left_pulse=cfg.STEERING_LEFT_PWM, 
                                         right_pulse=cfg.STEERING_RIGHT_PWM)
         
-        throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ, inverted=cfg.THROTTLE_PWM_INVERTED)
+        throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ, inverted=cfg.THROTTLE_PWM_INVERTED,
+                                         center=cfg.THROTTLE_STOPPED_PWM)
         throttle = PWMThrottle(controller=throttle_controller,
                                             max_pulse=cfg.THROTTLE_FORWARD_PWM,
                                             zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        V.add(steering, inputs=['angle'], threaded=True)
-        V.add(throttle, inputs=['throttle'], threaded=True)
+        V.add(steering, inputs=['angle'])
+        V.add(throttle, inputs=['throttle'])
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:
@@ -704,22 +724,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     if cfg.RECORD_DURING_AI:
         inputs += ['pilot/angle', 'pilot/throttle']
         types += ['float', 'float']
-
-    if cfg.HAVE_INA226:
-        inputs += ['volt_a', 'volt_b']
-        types  += ['float',  'float']
-
-    if cfg.HAVE_ADS1115:
-        inputs += ['dist0', 'dist1', 'dist2', 'dist3']
-        types  += ['float', 'float', 'float', 'float']
-
-    if cfg.HAVE_PSOC_ADC:
-        inputs += ['dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6']
-        types  += ['float', 'float', 'float', 'float', 'float', 'float', 'float']
-
-    if cfg.HAVE_REVCOUNT:
-        inputs += ['ch3','ch4']
-        types  += ['int','int']
 
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types, user_meta=meta)
@@ -763,6 +767,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'throttle',
                 'ch1',
                 'ch2',
+                'ch3',
                 'ch4',
                 'imu/acl_x',
                 'imu/acl_y',
@@ -770,6 +775,16 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'imu/gyr_x',
                 'imu/gyr_y',
                 'imu/gyr_z',
+                'imu/mag_x',
+                'imu/mag_y',
+                'imu/mag_z',
+                'imu/angle_x',
+                'imu/angle_y',
+                'imu/angle_z',
+                'imu/q_0',
+                'imu/q_1',
+                'imu/q_2',
+                'imu/q_3',
                 'volt_a',
                 'volt_b',
                 'dist0',
@@ -779,6 +794,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'dist4',
                 'dist5',
                 'dist6',
+                'dist7',
                 'pwmcount',
                 'recording',
                 'auto_record_on_throttle',
@@ -796,15 +812,60 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'lat3',
                 'period_time'
             ],
-            threaded=True
+            threaded=False #True
         )
 
     if cfg.HAVE_BUZZER:
-        from donkeycar.parts.buzzer import BUZZER
-        V.add(BUZZER(cfg), inputs=['tub/num_records'])
+        from donkeycar.parts.buzzer import Buzzer
+        V.add(Buzzer(cfg), inputs=['tub/num_records'])
+
+    if True:
+        from donkeycar.parts.log import Log
+        V.add(Log(cfg),
+            inputs=[
+                'tub/num_records',
+                'period_time',
+                'angle',
+                'throttle',
+                'user/angle',
+                'user/throttle',
+                'user/mode',
+                'pilot/angle',
+                'pilot/throttle',
+                'ch1',
+                'ch2',
+                'ch3',
+                'ch4',
+                'imu/acl_x',
+                'imu/acl_y',
+                'imu/acl_z',
+                'imu/gyr_x',
+                'imu/gyr_y',
+                'imu/gyr_z',
+                'imu/mag_x',
+                'imu/mag_y',
+                'imu/mag_z',
+                'imu/angle_x',
+                'imu/angle_y',
+                'imu/angle_z',
+                'imu/q_0',
+                'imu/q_1',
+                'imu/q_2',
+                'imu/q_3',
+                'volt_a',
+                'volt_b',
+                'dist0',
+                'dist1',
+                'dist2',
+                'dist3',
+                'dist4',
+                'dist5',
+                'dist6',
+                'dist7'
+            ])
 
     #run the vehicle for 20 seconds
-    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+    V.start(rate_hz=1000, #cfg.DRIVE_LOOP_HZ,
             max_loop_count=cfg.MAX_LOOPS)
 
 

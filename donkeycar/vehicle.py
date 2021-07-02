@@ -12,7 +12,6 @@ from threading import Thread
 from .memory import Memory
 from prettytable import PrettyTable
 import traceback
-import RPi.GPIO as GPIO
 
 
 class PartProfiler:
@@ -54,7 +53,7 @@ class PartProfiler:
             row += ["%.2f" % (np.percentile(arr, p) * 1000) for p in pctile]
             pt.add_row(row)
         print(pt)
-        f = open("/run/shm/mycar/report.txt","w")
+        f = open("/run/shm/mycar/data/report.txt","w")
         f.write(str(pt))
         f.close()
 
@@ -135,12 +134,6 @@ class Vehicle:
             If debug output should be printed into shell
         """
 
-        self.led_off = GPIO.HIGH
-        self.led_on = GPIO.LOW
-        self.gpio_pin_overtime = 13 #GPIO13 21 #GPIO9
-        GPIO.setup(self.gpio_pin_overtime, GPIO.OUT)
-        GPIO.output(self.gpio_pin_overtime, self.led_off)
-
         try:
 
             self.on = True
@@ -167,9 +160,7 @@ class Vehicle:
                 sleep_time = 1.0 / rate_hz - (time.time() - start_time)
                 if sleep_time > 0.0:
                     time.sleep(sleep_time)
-                    GPIO.output(self.gpio_pin_overtime, self.led_off)
                 else:
-                    GPIO.output(self.gpio_pin_overtime, self.led_on)
                     # print a message when could not maintain loop rate.
                     if verbose:
                         print('WARN::Vehicle: jitter violation in vehicle loop '

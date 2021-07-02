@@ -32,19 +32,25 @@ hostname="mba2010"
 #ramdisk="RamDisk_2G"
 ramdisk="RamDisk"
 
-TUB=/run/shm/mycar/data/tub
+MYCAR=/run/shm/mycar
+TUB=$MYCAR/data/tub
 
 if [ $1 != "s" ]; then
 
-rm -r /run/shm/mycar/
-mkdir /run/shm/mycar
-mkdir /run/shm/mycar/data
+rm -r $MYCAR/
+mkdir $MYCAR
+mkdir $MYCAR/data
 
 rm ./models/*.png
 sudo pigpiod
 
 vcgencmd measure_clock arm
 vcgencmd measure_temp
+
+if [ -e "/dev/ttyWt901c" ]; then
+  stty -F /dev/ttyWt901c 9600
+  stty -a -F /dev/ttyWt901c | grep speed
+fi
 
 if [ $1 != "a" ]; then
   #python manage.py drive $1
@@ -61,17 +67,17 @@ vcgencmd measure_temp
 
 read -p "Hit enter: sudo zip"
 
-cp config.py /run/shm/mycar/
-cp myconfig.py /run/shm/mycar/
+cp config.py $MYCAR/
+cp myconfig.py $MYCAR/
 if [ $1 = "a" ]; then
-  cp -r ./models /run/shm/mycar/
+  cp -r ./models $MYCAR/
 fi
 
 ymdhm=`date "+%Y%m%d%H%M"`
 
 LOGS="/media/pi/MYCAR_LOGS"
 if [ ! -e $LOGS ]; then
-    LOGS="./logs"
+    LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
 fi
 
 pushd /run/shm
@@ -84,27 +90,20 @@ else
 fi
 popd
 
-read -p "Hit enter: rsync *.json"
-rsync -rtv --delete $TUB/*.json work@$hostname.local:/Volumes/$ramdisk/data/
+read -p "Hit enter: rsync log.csv"
+rsync -rtv --delete $MYCAR/data/log.csv work@$hostname.local:/Volumes/$ramdisk/
 
 read -p "Hit enter: makemovie"
 donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_movie.mp4 --scale 1
 
 read -p "Hit enter: rsync movie"
 rsync -rtv $LOGS/log_${ymdhm}_movie.mp4 work@$hostname.local:/Volumes/$ramdisk/
-
-#else
-#
-#read -p "rsync movie input filename: "
-#read fn
-#rsync -rtv $LOGS/$fn work@$hostname.local:/Volumes/$ramdisk/
-#
 fi
 
 read -p "Hit enter: updown"
 echo -n "input path: "
 read str
-rsync -rtv /run/shm/mycar work@ddprog.mydns.jp:/run/shm/$str/
+rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
 
 echo $str
 read -p "Hit enter: get model file"

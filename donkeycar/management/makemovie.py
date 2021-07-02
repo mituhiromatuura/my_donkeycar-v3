@@ -74,6 +74,15 @@ class MakeMovie(object):
                 self.do_salient = self.init_salient(self.keras_part.model)
 
         print('making movie', args.out, 'from', num_frames, 'images')
+
+        try:
+            import csv
+            f = open('/run/shm/mycar/data/log.csv','r')
+            self.csv = [row for row in csv.reader(f)]
+            self.csv_file = True
+        except:
+            self.csv_file = False
+
         clip = mpy.VideoClip(self.make_frame,
                              duration=((num_frames - 1) / self.cfg.DRIVE_LOOP_HZ))
         clip.write_videofile(args.out, fps=self.cfg.DRIVE_LOOP_HZ)
@@ -96,6 +105,7 @@ class MakeMovie(object):
 
         height, width, _ = img.shape
 
+        '''
         length = height
         a1 = user_angle * 45.0
         l1 = user_throttle * length
@@ -105,18 +115,39 @@ class MakeMovie(object):
         p1 = tuple((mid - 2, height - 1))
         p11 = tuple((int(p1[0] + l1 * math.cos((a1 + 270.0) * self.deg_to_rad)),
                      int(p1[1] + l1 * math.sin((a1 + 270.0) * self.deg_to_rad))))
+        '''
+        p1 = tuple((int(round(width/2)), int(round(height))))
+        p11 = tuple((int(round(width/2 + width/2 * user_angle)),
+                    int(round(height - height * user_throttle))))
 
         # user is green, pilot is blue
         cv2.line(img, p1, p11, (0, 255, 0), 2)
 
         textFontFace = cv2.FONT_HERSHEY_SIMPLEX
         textFontScale = 0.4
-        textColor = (255,255,255)
+        textColor = (0, 255, 0)
+        #textColor = (0, 0, 255)
         textThickness = 1
         cv2.putText(img, record["user/mode"],(0,9),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
 
-        if self.cfg.HAVE_PSOC_ADC:
+        if self.csv_file == True:
+            row = self.csv[self.iRec + 1]
+
+            i = 2+2+3+2+4+9
+            x = float(row[i+0])
+            y = float(row[i+1])
+            cv2.line(img,(width//2,height//2),(int(x*40)+width//2,int(y*40)+height//2),(0,255,255))
+
+            i = 2+2+3+2+4+9+3+4+2
+            dist0 = float(row[i+0])
+            dist1 = float(row[i+1])
+            dist2 = float(row[i+2])
+            dist3 = float(row[i+3])
+            dist4 = float(row[i+4])
+            dist5 = float(row[i+5])
+            dist6 = float(row[i+6])
+
             def circleColor(dist):
                 if dist < self.cfg.ADC_COUNTER:
                     return (0,255,0)
@@ -124,14 +155,6 @@ class MakeMovie(object):
                     return (255,255,0)
                 else:
                     return (255,0,0)
-
-            dist0 = float(record["dist0"])
-            dist1 = float(record["dist1"])
-            dist2 = float(record["dist2"])
-            dist3 = float(record["dist3"])
-            dist4 = float(record["dist4"])
-            dist5 = float(record["dist5"])
-            dist6 = float(record["dist6"])
 
             cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
             cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist1),1)

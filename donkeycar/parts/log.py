@@ -5,7 +5,6 @@ class Log:
 	def __init__(self,cfg):
 
 		self.cfg = cfg
-		self.on = True
 
 		self.n = -1
 		self.sum = 0
@@ -34,6 +33,16 @@ class Log:
 		self.gyr_x = list()
 		self.gyr_y = list()
 		self.gyr_z = list()
+		self.mag_x = list()
+		self.mag_y = list()
+		self.mag_z = list()
+		self.angle_x = list()
+		self.angle_y = list()
+		self.angle_z = list()
+		self.q_0 = list()
+		self.q_1 = list()
+		self.q_2 = list()
+		self.q_3 = list()
 
 		self.volt_a = list()
 		self.volt_b = list()
@@ -45,6 +54,7 @@ class Log:
 		self.dist4 = list()
 		self.dist5 = list()
 		self.dist6 = list()
+		self.dist7 = list()
 
 	def run(self,
 			num,
@@ -71,6 +81,16 @@ class Log:
 			gyr_x,
 			gyr_y,
 			gyr_z,
+			mag_x,
+			mag_y,
+			mag_z,
+			angle_x,
+			angle_y,
+			angle_z,
+			q_0,
+			q_1,
+			q_2,
+			q_3,
 
 			volt_a,
 			volt_b,
@@ -81,7 +101,8 @@ class Log:
 			dist3,
 			dist4,
 			dist5,
-			dist6
+			dist6,
+			dist7
 			):
 
 		if type(num) == int:
@@ -113,6 +134,16 @@ class Log:
 				self.gyr_x.append(gyr_x)
 				self.gyr_y.append(gyr_y)
 				self.gyr_z.append(gyr_z)
+				self.mag_x.append(mag_x)
+				self.mag_y.append(mag_y)
+				self.mag_z.append(mag_z)
+				self.angle_x.append(angle_x)
+				self.angle_y.append(angle_y)
+				self.angle_z.append(angle_z)
+				self.q_0.append(q_0)
+				self.q_1.append(q_1)
+				self.q_2.append(q_2)
+				self.q_3.append(q_3)
 
 				self.volt_a.append(volt_a)
 				self.volt_b.append(volt_b)
@@ -124,12 +155,18 @@ class Log:
 				self.dist4.append(dist4)
 				self.dist5.append(dist5)
 				self.dist6.append(dist6)
+				self.dist7.append(dist7)
 
 	def shutdown(self):
-		self.on = False
-		print(self.sum / self.n)
+		if self.n > 0:
+			print(self.sum / self.n)
+		else:
+			print("no log")
 
-		f = open("/run/shm/mycar/log.csv","w")
+		f = open("/run/shm/mycar/data/log.csv","w")
+		f.write("n,ms,a,t,ua,ut,m,pa,pt,c1,c2,c3,c4,\
+				ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3,\
+				va,vb,d0,d1,d2,d3,d4,d5,d6,d7\n")
 		for i in range(self.n):
 			f.write(str(self.num[i]))
 			f.write(",")
@@ -169,6 +206,26 @@ class Log:
 			f.write(",")
 			f.write(str(self.gyr_z[i]))
 			f.write(",")
+			f.write(str(self.mag_x[i]))
+			f.write(",")
+			f.write(str(self.mag_y[i]))
+			f.write(",")
+			f.write(str(self.mag_z[i]))
+			f.write(",")
+			f.write(str(self.angle_x[i]))
+			f.write(",")
+			f.write(str(self.angle_y[i]))
+			f.write(",")
+			f.write(str(self.angle_z[i]))
+			f.write(",")
+			f.write(str(self.q_0[i]))
+			f.write(",")
+			f.write(str(self.q_1[i]))
+			f.write(",")
+			f.write(str(self.q_2[i]))
+			f.write(",")
+			f.write(str(self.q_3[i]))
+			f.write(",")
 			f.write(str(self.volt_a[i]))
 			f.write(",")
 			f.write(str(self.volt_b[i]))
@@ -186,5 +243,7 @@ class Log:
 			f.write(str(self.dist5[i]))
 			f.write(",")
 			f.write(str(self.dist6[i]))
+			f.write(",")
+			f.write(str(self.dist7[i]))
 			f.write("\n")
 		f.close()

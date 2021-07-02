@@ -49,8 +49,11 @@ class FPVDisp:
         self.disp_imu = True
         self.disp_callsign = False
         self.on = True
+        '''
         self.executor = concurrent.futures.ProcessPoolExecutor(max_workers=1)
+        '''
 
+    '''
     def run_threaded(self,
         mode,
         image,
@@ -58,6 +61,7 @@ class FPVDisp:
         throttle,
         spi_angle,
         spi_throttle,
+        spi_ch3,
         spi_revcount,
         imu_acl_x,
         imu_acl_y,
@@ -65,6 +69,16 @@ class FPVDisp:
         imu_gyr_x,
         imu_gyr_y,
         imu_gyr_z,
+        imu_mag_x,
+        imu_mag_y,
+        imu_mag_z,
+        imu_angle_x,
+        imu_angle_y,
+        imu_angle_z,
+        imu_q_0,
+        imu_q_1,
+        imu_q_2,
+        imu_q_3,
         volt_a,
         volt_b,
         dist0,
@@ -74,6 +88,7 @@ class FPVDisp:
         dist4,
         dist5,
         dist6,
+        dist7,
         pwmcount,
         recording,
         auto_record_on_throttle,
@@ -99,6 +114,7 @@ class FPVDisp:
         self.throttle = throttle
         self.spi_angle = spi_angle
         self.spi_throttle = spi_throttle
+        self.spi_ch3 = spi_ch3,
         self.spi_revcount = spi_revcount
         self.imu_acl_x = imu_acl_x
         self.imu_acl_y = imu_acl_y
@@ -106,6 +122,16 @@ class FPVDisp:
         self.imu_gyr_x = imu_gyr_x
         self.imu_gyr_y = imu_gyr_y
         self.imu_gyr_z = imu_gyr_z
+        self.imu_mag_x = imu_mag_x
+        self.imu_mag_y = imu_mag_y
+        self.imu_mag_z = imu_mag_z
+        self.imu_angle_x = imu_angle_x
+        self.imu_angle_y = imu_angle_y
+        self.imu_angle_z = imu_angle_z
+        self.imu_q_0 = imu_q_0
+        self.imu_q_1 = imu_q_1
+        self.imu_q_2 = imu_q_2
+        self.imu_q_3 = imu_q_3
         self.volt_a = volt_a
         self.volt_b = volt_b
         self.dist0 = dist0
@@ -115,6 +141,7 @@ class FPVDisp:
         self.dist4 = dist4
         self.dist5 = dist5
         self.dist6 = dist6
+        self.dist7 = dist7
         self.pwmcount = pwmcount
         self.recording = recording
         self.auto_record_on_throttle = auto_record_on_throttle
@@ -131,6 +158,7 @@ class FPVDisp:
         self.lat2 = lat2
         self.lat3 = lat3
         self.period_time = period_time
+    '''
 
     def run(self,
         mode,
@@ -139,6 +167,7 @@ class FPVDisp:
         throttle,
         spi_angle,
         spi_throttle,
+        spi_ch3,
         spi_revcount,
         imu_acl_x,
         imu_acl_y,
@@ -146,6 +175,16 @@ class FPVDisp:
         imu_gyr_x,
         imu_gyr_y,
         imu_gyr_z,
+        imu_mag_x,
+        imu_mag_y,
+        imu_mag_z,
+        imu_angle_x,
+        imu_angle_y,
+        imu_angle_z,
+        imu_q_0,
+        imu_q_1,
+        imu_q_2,
+        imu_q_3,
         volt_a,
         volt_b,
         dist0,
@@ -155,6 +194,7 @@ class FPVDisp:
         dist4,
         dist5,
         dist6,
+        dist7,
         pwmcount,
         recording,
         auto_record_on_throttle,
@@ -162,9 +202,9 @@ class FPVDisp:
         throttle_scale,
         ai_throttle_mult,
         disp_on,
+        esc_on,
         sw_l3,
         sw_r3,
-        esc_on,
         stop,
         num_records,
         lat1,
@@ -179,6 +219,7 @@ class FPVDisp:
             self.throttle = throttle
             self.spi_angle = spi_angle
             self.spi_throttle = spi_throttle
+            self.spi_ch3 = spi_ch3
             self.spi_revcount = spi_revcount
             self.imu_acl_x = imu_acl_x
             self.imu_acl_y = imu_acl_y
@@ -186,6 +227,16 @@ class FPVDisp:
             self.imu_gyr_x = imu_gyr_x
             self.imu_gyr_y = imu_gyr_y
             self.imu_gyr_z = imu_gyr_z
+            self.imu_mag_x = imu_mag_x
+            self.imu_mag_y = imu_mag_y
+            self.imu_mag_z = imu_mag_z
+            self.imu_angle_x = imu_angle_x
+            self.imu_angle_y = imu_angle_y
+            self.imu_angle_z = imu_angle_z
+            self.imu_q_0 = imu_q_0
+            self.imu_q_1 = imu_q_1
+            self.imu_q_2 = imu_q_2
+            self.imu_q_3 = imu_q_3
             self.volt_a = volt_a
             self.volt_b = volt_b
             self.dist0 = dist0
@@ -195,6 +246,7 @@ class FPVDisp:
             self.dist4 = dist4
             self.dist5 = dist5
             self.dist6 = dist6
+            self.dist7 = dist7
             self.pwmcount = pwmcount
             self.recording = recording
             self.auto_record_on_throttle = auto_record_on_throttle
@@ -202,9 +254,9 @@ class FPVDisp:
             self.throttle_scale = throttle_scale
             self.ai_throttle_mult = ai_throttle_mult
             self.disp_on = disp_on
+            self.esc_on = esc_on
             self.sw_l3 = sw_l3,
             self.sw_r3 = sw_r3,
-            self.esc_on = esc_on
             self.stop = stop
             self.num_records = num_records
             self.lat1 = lat1
@@ -212,13 +264,16 @@ class FPVDisp:
             self.lat3 = lat3
             self.period_time = period_time
 
-            self.executor.submit(self.disp_main())
+            #self.executor.submit(self.disp_main())
+            self.disp_main()
 
+    '''
     def update(self):
         while self.on:
             if self.executor_on == True:
                 self.executor.submit(self.disp_main())
-                time.sleep((1000//30/1000))
+                time.sleep((1/self.cfg.DRIVE_LOOP_HZ))
+    '''
 
     def disp_main(self):
         if self.constant_throttle:
@@ -242,11 +297,11 @@ class FPVDisp:
                 GPIO.output(self.gpio_pin_local_angle, self.led_on)
                 GPIO.output(self.gpio_pin_local, self.led_on)
 
-        if not self.cfg.FPVDISP_REC:
-            if self.recording:
-                if self.num_records % 1000 == 0:
-                    print(self.num_records)
-                return
+        try:
+            if self.num_records % 1000 == 0:
+                print(self.num_records)
+        except:
+            pass
 
         cv2.namedWindow('DonkeyCamera', cv2.WINDOW_NORMAL)
         #cv2.namedWindow('DonkeyCamera', cv2.WINDOW_AUTOSIZE)
@@ -277,7 +332,11 @@ class FPVDisp:
         else:
             img = img2
         '''
-        img = self.image.copy()
+
+        try:
+            img = self.image.copy()
+        except:
+            return
         #img = cv2.vconcat([self.image.copy(), self.image.copy()])
 
         x0=int(round(wwidth/2))
@@ -339,17 +398,12 @@ class FPVDisp:
         if self.cfg.HAVE_IMU:
             #if self.disp_imu:
             if self.sw_r3:
-                '''
-                self.imu_acl_x /= 10
-                self.imu_acl_y /= 10
-                self.imu_acl_z /= 10
+                self.imu_acl_x /= 1000
+                self.imu_acl_y /= 1000
+                self.imu_acl_z /= 1000
                 self.imu_gyr_x /= 100
                 self.imu_gyr_y /= 100
-                self.imu_gyr_z /= 100
-                '''
-                self.imu_gyr_x /= 10
-                self.imu_gyr_y /= 10
-                self.imu_gyr_z /= 100
+                self.imu_gyr_z /= 1
 
                 '''
                 cv2.putText(img,str(round(self.imu_acl_x,2)),(0,69),textFontFace,textFontScale,textColor,textThickness)
@@ -432,10 +486,10 @@ class FPVDisp:
 
         #if self.fullscreen:
         if self.sw_l3:
-            cv2.resizeWindow("DonkeyCamera",640,480)
+            cv2.resizeWindow("DonkeyCamera",wwidth*3,wheight*3)
             #cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         else:
-            cv2.resizeWindow("DonkeyCamera",160,120)
+            cv2.resizeWindow("DonkeyCamera",wwidth,wheight)
             #cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
         cv2.imshow('DonkeyCamera', img[:,:,::-1])
 

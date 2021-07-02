@@ -143,15 +143,6 @@ class Joystick(object):
         return button, button_state, axis, axis_val
 
 
-class TTUJoystick(Joystick):
-    '''
-    An interface to a physical PS3 joystick available at /dev/input/js0
-    Contains mapping that work for Raspian Stretch drivers
-    '''
-    def __init__(self, *args, **kwargs):
-        super(TTUJoystick, self).__init__(*args, **kwargs)
-
-
 class JoystickController(object):
     '''
     JoystickController is a base class. You will not use this class directly,
@@ -617,23 +608,25 @@ class TTUJoystickController(JoystickController):
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
-        if self.ch1 > pwm_min and self.ch1 < pwm_max:
-            self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
-            self.set_steering(self.angle)
+        self.ch1 = min(self.ch1, pwm_max)
+        self.ch1 = max(self.ch1, pwm_min)
+        self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
+        self.set_steering(self.angle)
 
         pwm_mid = 1530
         pwm_sub = 430
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
-        if self.ch2 > pwm_min and self.ch2 < pwm_max:
-            self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
-            self.set_throttle(self.throttle)
+        self.ch2 = min(self.ch2, pwm_max)
+        self.ch2 = max(self.ch2, pwm_min)
+        self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
+        self.set_throttle(self.throttle)
 
-        #if self.ch4 != 0:
-        #    self.ch4 = 60 * 1000000 // self.ch4
-        self.ch3 = self.ch1
-        self.ch4 = self.ch2
+        self.ch3 = 0
+
+        if self.ch4 != 0:
+            self.ch4 = 60 * 1000000 // self.ch4
 
 
     def init_js(self):

@@ -1,10 +1,14 @@
 DATA_PATH = '/run/shm/mycar/data/'
-DRIVE_LOOP_HZ = 30
+DRIVE_LOOP_HZ = 40
 
+#IMAGE_H = 80
 #IMAGE_H = 64
 
-HAVE_IMU = True
-#HAVE_IMU = False
+#HAVE_IMU = True
+HAVE_IMU = False
+
+HAVE_AHRS = True
+#HAVE_AHRS = False
 
 HAVE_INA226 = True
 #HAVE_INA226 = False
@@ -12,11 +16,11 @@ HAVE_INA226 = True
 #HAVE_ADS1115 = True
 HAVE_ADS1115 = False
 
-#HAVE_PSOC_ADC = True
-HAVE_PSOC_ADC = False
+HAVE_PSOC_ADC = True
+#HAVE_PSOC_ADC = False
 
 ADC_BRAKE = 0.5
-ADC_COUNTER = 0.3
+ADC_COUNTER = 0.5
 
 HAVE_REVCOUNT = True
 #HAVE_REVCOUNT = False
@@ -26,9 +30,6 @@ HAVE_BUZZER = True
 
 USE_FPVDISP = True
 #USE_FPVDISP = False
-
-FPVDISP_REC = True
-#FPVDISP_REC = False
 
 
 CONTROLLER_TYPE='TTU'

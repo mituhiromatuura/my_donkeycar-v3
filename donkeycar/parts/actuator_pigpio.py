@@ -59,13 +59,14 @@ class PiGPIO_PWM():
     # Default multipler for pulses from config etc is 100
     '''
 
-    def __init__(self, pin, pgio=None, freq=75, inverted=False):
+    def __init__(self, pin, pgio=None, freq=75, inverted=False, center=0):
         import pigpio
 
         self.pin = pin
         self.pgio = pgio or pigpio.pi()
         self.freq = freq
         self.inverted = inverted
+        self.center = center
         self.pgio.set_mode(self.pin, pigpio.OUTPUT)
 
     def __del__(self):
@@ -73,7 +74,7 @@ class PiGPIO_PWM():
 
     def set_pulse(self, pulse):
         if self.inverted:
-          pulse = 2 * 1540 - pulse #1540 is STEERING_CENTER_PWM, THROTTLE_STOPPED_PWM
+          pulse = 2 * self.center - pulse
         self.pgio.hardware_PWM(self.pin, self.freq, int(pulse * self.freq))
 
     def run(self, pulse):
