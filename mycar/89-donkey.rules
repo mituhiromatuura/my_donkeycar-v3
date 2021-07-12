@@ -2,5 +2,6 @@ KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATT
 KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATTRS{phys}=="dc:a6:32:0f:1a:70",ATTRS{uniq}=="0c:fc:83:6a:71:47",SYMLINK+="LAT-RC01-2"
 KERNEL=="event*",SUBSYSTEM=="input",ATTRS{name}=="LAT-RC01 Consumer Control",ATTRS{phys}=="dc:a6:32:0f:1a:70",ATTRS{uniq}=="0c:fc:83:06:96:c5",SYMLINK+="LAT-RC01-3"
 KERNEL=="ttyACM*",ATTRS{idVendor}=="04b4",ATTRS{product}=="USBUART",SYMLINK+="ttyPsoc"
-KERNEL=="ttyACM*",ATTRS{idVendor}=="2341",ATTRS{product}=="Arduino Leonardo",SYMLINK+="ttyMPU9250"
-KERNEL=="ttyUSB*",ATTRS{idVendor}=="0403",ATTRS{product}=="FT230X Basic UART",SYMLINK+="ttyWt901c"
+#KERNEL=="ttyACM*",ATTRS{idVendor}=="2341",ATTRS{product}=="Arduino Leonardo",SYMLINK+="ttyMPU9250"
+#KERNEL=="ttyUSB*",ATTRS{idVendor}=="0403",ATTRS{product}=="FT230X Basic UART",SYMLINK+="ttyWt901c"
+KERNEL=="ttyUSB*",ATTRS{idVendor}=="10c4",ATTRS{product}=="CP2102 USB to UART Bridge Controller",SYMLINK+="ttyWt901"

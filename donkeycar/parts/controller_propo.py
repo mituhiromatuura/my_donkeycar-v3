@@ -608,9 +608,8 @@ class TTUJoystickController(JoystickController):
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
-        self.ch1 = min(self.ch1, pwm_max)
-        self.ch1 = max(self.ch1, pwm_min)
-        self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
+        if (self.ch1 >= pwm_min) and (self.ch1 <= pwm_max):
+            self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
         self.set_steering(self.angle)
 
         pwm_mid = 1530
@@ -618,9 +617,8 @@ class TTUJoystickController(JoystickController):
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
-        self.ch2 = min(self.ch2, pwm_max)
-        self.ch2 = max(self.ch2, pwm_min)
-        self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
+        if (self.ch2 >= pwm_min) and (self.ch2 <= pwm_max):
+            self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
         self.set_throttle(self.throttle)
 
         self.ch3 = 0

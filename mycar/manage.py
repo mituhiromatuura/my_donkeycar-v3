@@ -337,9 +337,18 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             'imu/q_0', 'imu/q_x', 'imu/q_y', 'imu/q_z',
             'imu/ypr_y', 'imu/ypr_p', 'imu/ypr_r'],
             threaded=True)
-        '''
+
         from donkeycar.parts.wt901c import Wt901c
         V.add(Wt901c('/dev/ttyWt901c'), outputs=[
+            'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
+            'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z',
+            'imu/mag_x', 'imu/mag_y', 'imu/mag_z',
+            'imu/angle_x','imu/angle_y','imu/angle_z',
+            'imu/q_0', 'imu/q_1', 'imu/q_2', 'imu/q_3'],
+            threaded=True)
+        '''
+        from donkeycar.parts.wt901 import Wt901
+        V.add(Wt901('/dev/ttyWt901'), outputs=[
             'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
             'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z',
             'imu/mag_x', 'imu/mag_y', 'imu/mag_z',
@@ -531,6 +540,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         def run(self, mode,
                     user_angle, user_throttle,
                     pilot_angle, pilot_throttle,
+                    throttle_scale,
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
             if mode == 'user':
                 if False: #cfg.HAVE_PSOC_ADC:
@@ -550,21 +560,31 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 try:
                     if cfg.HAVE_PSOC_ADC:
                         if pilot_throttle > 0:
+                            '''
                             if max([dist0,dist3,dist4]) > cfg.ADC_BRAKE:
                                 pilot_throttle = pilot_throttle - max([dist0,dist3,dist4])
-                            if max([dist1,dist5]) > cfg.ADC_COUNTER:
-                                pilot_angle = pilot_angle + max([dist1,dist5])
-                            if max([dist2,dist6]) > cfg.ADC_COUNTER:
-                                pilot_angle = pilot_angle - max([dist2,dist6])
+
+                            if dist1 > cfg.ADC_COUNTER and pilot_angle < cfg.ADC_COUNTER:
+                                pilot_angle = pilot_angle + dist1
+                            elif dist2 > cfg.ADC_COUNTER and pilot_angle > cfg.ADC_COUNTER * -1:
+                                pilot_angle = pilot_angle - dist2
+                            '''
+                            if dist0 > cfg.ADC_BRAKE:
+                                if dist0 > 1:
+                                    dist0 = 1
+                                elif dist0 < cfg.ADC_BRAKE:
+                                    dist0 = 0
+                                pilot_throttle = pilot_throttle * min((1 - dist0),1)
                 except:
                     pass
-                if user_throttle > 0.9:
+                if user_throttle > throttle_scale * 0.9:
                     return pilot_angle if pilot_angle else 0.0, -0.5
                 return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
                   'pilot/angle', 'pilot/throttle',
+                  'throttle_scale',
                   'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6', 'dist7'],
           outputs=['angle', 'throttle'])
 
@@ -673,7 +693,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
     
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
-        from donkeycar.parts.actuator_pigpio import PWMSteering, PWMThrottle, PiGPIO_PWM
+        from donkeycar.parts.actuator_pigpio import PWMSteering, PWMThrottle, PiGPIO_PWM, PiGPIO_SWPWM
         steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED,
                                          center=cfg.STEERING_CENTER_PWM)
         steering = PWMSteering(controller=steering_controller,
@@ -688,6 +708,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
         V.add(steering, inputs=['angle'])
         V.add(throttle, inputs=['throttle'])
+
+        Pan_controller = PiGPIO_SWPWM(pin=19, freq=50)
+        Pan = PWMSteering(controller=Pan_controller,
+                                        left_pulse=cfg.STEERING_LEFT_PWM, 
+                                        right_pulse=cfg.STEERING_RIGHT_PWM)
+        V.add(Pan, inputs=['angle'])
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:
@@ -817,7 +843,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if cfg.HAVE_BUZZER:
         from donkeycar.parts.buzzer import Buzzer
-        V.add(Buzzer(cfg), inputs=['tub/num_records'])
+        V.add(Buzzer(cfg), inputs=['user/mode', 'tub/num_records'])
 
     if True:
         from donkeycar.parts.log import Log

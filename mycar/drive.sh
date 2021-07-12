@@ -15,6 +15,9 @@ else
   if [ $1 = "a" ]; then
     rm $DOUBLE
   fi
+  if [ $1 = "m" ]; then
+    rm $DOUBLE
+  fi
   if [ $1 = "s" ]; then
     rm $DOUBLE
   fi
@@ -35,7 +38,14 @@ ramdisk="RamDisk"
 MYCAR=/run/shm/mycar
 TUB=$MYCAR/data/tub
 
-if [ $1 != "s" ]; then
+ymdhm=`date "+%Y%m%d%H%M"`
+
+LOGS="/media/pi/MYCAR_LOGS"
+if [ ! -e $LOGS ]; then
+    LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
+fi
+
+if [ $1 != "m" -a $1 != "s" ]; then
 
 rm -r $MYCAR/
 mkdir $MYCAR
@@ -47,17 +57,22 @@ sudo pigpiod
 vcgencmd measure_clock arm
 vcgencmd measure_temp
 
-if [ -e "/dev/ttyWt901c" ]; then
-  stty -F /dev/ttyWt901c 9600
-  stty -a -F /dev/ttyWt901c | grep speed
-fi
+#if [ -e "/dev/ttyWt901c" ]; then
+#  stty -F /dev/ttyWt901c 9600
+#  stty -a -F /dev/ttyWt901c | grep speed
+#fi
 
 if [ $1 != "a" ]; then
   #python manage.py drive $1
   python manage.py drive --js
 else
   #python manage.py drive --model=./models/mypilot.h5 --js
-  python manage.py drive --model=./models/mypilot-aug.tflite --type coral_tflite_linear --js
+  if [ $2 == ""]; then
+    MODEL=./models/mypilot-aug.tflite
+  else
+    MODEL=$2
+  fi
+  python manage.py drive --model=$MODEL --type coral_tflite_linear --js
 fi
 sudo killall -9 pigpiod
 sudo rm -rf /var/run/pigpio.pid
@@ -73,13 +88,6 @@ if [ $1 = "a" ]; then
   cp -r ./models $MYCAR/
 fi
 
-ymdhm=`date "+%Y%m%d%H%M"`
-
-LOGS="/media/pi/MYCAR_LOGS"
-if [ ! -e $LOGS ]; then
-    LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
-fi
-
 pushd /run/shm
 if [ $1 != "a" ]; then
   sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
@@ -93,11 +101,20 @@ popd
 read -p "Hit enter: rsync log.csv"
 rsync -rtv --delete $MYCAR/data/log.csv work@$hostname.local:/Volumes/$ramdisk/
 
-read -p "Hit enter: makemovie"
-donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_movie.mp4 --scale 1
+fi
+if [ $1 != "s" ]; then
 
-read -p "Hit enter: rsync movie"
-rsync -rtv $LOGS/log_${ymdhm}_movie.mp4 work@$hostname.local:/Volumes/$ramdisk/
+read -p "Hit enter: makemovie"
+if [ $1 != "a" ]; then
+  donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_drive.mp4 --scale 1
+  read -p "Hit enter: rsync movie"
+  rsync -rtv $LOGS/log_${ymdhm}_drive.mp4 work@$hostname.local:/Volumes/$ramdisk/
+else
+  donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_auto.mp4 --scale 1
+  read -p "Hit enter: rsync movie"
+  rsync -rtv $LOGS/log_${ymdhm}_auto.mp4 work@$hostname.local:/Volumes/$ramdisk/
+fi
+
 fi
 
 read -p "Hit enter: updown"
@@ -108,5 +125,7 @@ rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
 echo $str
 read -p "Hit enter: get model file"
 rsync -rtv --delete work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
+cp ./models/mypilot-aug.h5 ./logs/mypilot-aug_${ymdhm}.h5
+cp ./models/mypilot-aug.tflite ./logs/mypilot-aug_${ymdhm}.tflite
 
 rm $DOUBLE

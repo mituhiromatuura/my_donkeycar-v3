@@ -81,6 +81,29 @@ class PiGPIO_PWM():
         self.set_pulse(pulse)
 
 
+class PiGPIO_SWPWM():
+
+    def __init__(self, pin, pgio=None, freq=75):
+        import pigpio
+
+        self.pin = pin
+        self.pgio = pgio or pigpio.pi()
+        self.freq = freq
+        self.pgio.set_mode(self.pin, pigpio.OUTPUT)
+        self.pgio.set_PWM_frequency(self.pin, self.freq)
+        self.pgio.set_PWM_range(self.pin, 1000000 // self.freq)
+
+
+    def __del__(self):
+        self.pgio.stop()
+
+    def set_pulse(self, pulse):
+        self.pgio.set_PWM_dutycycle(self.pin, pulse)
+
+    def run(self, pulse):
+        self.set_pulse(pulse)
+
+
 class JHat:
     ''' 
     PWM motor controler using Teensy emulating PCA9685. 

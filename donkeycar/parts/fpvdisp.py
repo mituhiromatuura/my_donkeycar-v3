@@ -453,6 +453,7 @@ class FPVDisp:
                 else:
                     return (255,0,0)
 
+            '''
             cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),circleColor(self.dist0),1)
             cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),circleColor(self.dist1),1)
             cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),circleColor(self.dist2),1)
@@ -461,7 +462,6 @@ class FPVDisp:
             cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),circleColor(self.dist5),1)
             cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),circleColor(self.dist6),1)
 
-            '''
             cv2.putText(img,"0",(wwidth//4*2,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"1",(wwidth//6*1,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"2",(wwidth//6*5,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
@@ -470,6 +470,9 @@ class FPVDisp:
             cv2.putText(img,"5",(wwidth//4*1,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"6",(wwidth//4*3,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
             '''
+            x = int(wwidth/2 * (1 + self.angle * 0.75))
+            cv2.circle(img,(x,wheight//2),int(self.dist0*40),circleColor(self.dist0),1)
+            cv2.putText(img,str(round(self.dist0,2)),(x,wheight//2),textFontFace,textFontScale,circleColor(self.dist0),textThickness)
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red
