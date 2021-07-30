@@ -147,8 +147,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
         V.add(ctr,
             inputs=['cam/image_array'],
-            outputs =['user/angle', 'user/throttle', 'user/mode', 'recording',
-                'ch1', 'ch2', 'ch3', 'ch4',
+            outputs =['user/anglex', 'user/throttlex', 'user/mode', 'recording',
+                'ch1x', 'ch2x', 'ch3x', 'ch4x',
                 'auto_record_on_throttle',
                 'constant_throttle',
                 'throttle_scale',
@@ -162,6 +162,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'lat2',
                 'lat3'],
             threaded=True)
+
+        from donkeycar.parts.psoc_counter import PsocCounter
+        ctr = PsocCounter('/dev/hidPsoc')
+        V.add(ctr, outputs = ['user/angle', 'user/throttle', 'ch4', 'ch1', 'ch2', 'ch3'], threaded=True)
 
     elif use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         #modify max_throttle closer to 1.0 to have more power
@@ -374,6 +378,11 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         from donkeycar.parts.psoc_adc import PsocAdc
         V.add(PsocAdc('/dev/ttyPsoc'), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6','dist7'], threaded=True)
 
+    #Vl53l0x
+    if cfg.HAVE_VL53L0X:
+        from donkeycar.parts.vl53l0x import Vl53l0x
+        V.add(Vl53l0x('/dev/ttyVl53'), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6','dist7'], threaded=True)
+
     #LAMP
     if cfg.DRIVE_TRAIN_TYPE != "SERVO_ESC":
         from donkeycar.parts.lamp import LedCtrl
@@ -541,50 +550,54 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     user_angle, user_throttle,
                     pilot_angle, pilot_throttle,
                     throttle_scale,
+                    ai_throttle_mult,
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
             if mode == 'user':
-                if False: #cfg.HAVE_PSOC_ADC:
+                '''
+                if cfg.HAVE_PSOC_ADC:
                     if user_throttle > 0:
-                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.ADC_BRAKE:
+                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.DIST_BRAKE:
                             user_throttle = user_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
-                    if max([dist1,dist3,dist5]) > cfg.ADC_COUNTER:
+                    if max([dist1,dist3,dist5]) > cfg.DIST_COUNTER:
                         user_angle = user_angle + max([dist1,dist3,dist5])
-                    if max([dist2,dist4,dist6]) > cfg.ADC_COUNTER:
+                    if max([dist2,dist4,dist6]) > cfg.DIST_COUNTER:
                         user_angle = user_angle - max([dist2,dist4,dist6])
-                return user_angle, user_throttle
+                '''
+                return user_angle, user_throttle * throttle_scale
 
             elif mode == 'local_angle':
-                return pilot_angle if pilot_angle else 0.0, user_throttle
+                return pilot_angle if pilot_angle else 0.0, user_throttle * throttle_scale
 
             else:
                 try:
                     if cfg.HAVE_PSOC_ADC:
                         if pilot_throttle > 0:
                             '''
-                            if max([dist0,dist3,dist4]) > cfg.ADC_BRAKE:
+                            if max([dist0,dist3,dist4]) > cfg.DIST_BRAKE:
                                 pilot_throttle = pilot_throttle - max([dist0,dist3,dist4])
 
-                            if dist1 > cfg.ADC_COUNTER and pilot_angle < cfg.ADC_COUNTER:
+                            if dist1 > cfg.DIST_COUNTER and pilot_angle < cfg.DIST_COUNTER:
                                 pilot_angle = pilot_angle + dist1
-                            elif dist2 > cfg.ADC_COUNTER and pilot_angle > cfg.ADC_COUNTER * -1:
+                            elif dist2 > cfg.DIST_COUNTER and pilot_angle > cfg.DIST_COUNTER * -1:
                                 pilot_angle = pilot_angle - dist2
                             '''
-                            if dist0 > cfg.ADC_BRAKE:
-                                if dist0 > 1:
-                                    dist0 = 1
-                                elif dist0 < cfg.ADC_BRAKE:
-                                    dist0 = 0
-                                pilot_throttle = pilot_throttle * min((1 - dist0),1)
+                            if dist0 > cfg.DIST_BRAKE:
+                                #if dist0 > 1:
+                                #    dist0 = 1
+                                #elif dist0 < cfg.DIST_BRAKE:
+                                #    dist0 = 0
+                                pilot_throttle = -0.1 #pilot_throttle * min((1 - dist0),1)
                 except:
                     pass
                 if user_throttle > throttle_scale * 0.9:
                     return pilot_angle if pilot_angle else 0.0, -0.5
-                return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
+                return pilot_angle if pilot_angle else 0.0, pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
                   'pilot/angle', 'pilot/throttle',
                   'throttle_scale',
+                  'ai_throttle_mult',
                   'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6', 'dist7'],
           outputs=['angle', 'throttle'])
 

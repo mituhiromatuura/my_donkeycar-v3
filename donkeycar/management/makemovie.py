@@ -134,40 +134,43 @@ class MakeMovie(object):
         if self.csv_file == True:
             row = self.csv[self.iRec + 1]
 
-            i = 2+2+3+2+4+9
-            x = math.cos(math.radians(float(row[i+2]))) * height/2
-            y = math.sin(math.radians(float(row[i+2]))) * height/2
-            cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
+            try;
+                i = 2+2+3+2+4+9
+                x = math.cos(math.radians(float(row[i+2]))) * height/2
+                y = math.sin(math.radians(float(row[i+2]))) * height/2
+                cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
+            except:
+                pass
 
-            i = 2+2+3+2+4+9+3+4+2
-            dist0 = float(row[i+0])
-            dist1 = float(row[i+1])
-            dist2 = float(row[i+2])
-            dist3 = float(row[i+3])
-            dist4 = float(row[i+4])
-            dist5 = float(row[i+5])
-            dist6 = float(row[i+6])
+            try;
+                def circleColor(dist):
+                    if dist < self.cfg.ADC_COUNTER:
+                        return (0,255,0)
+                    elif dist < self.cfg.ADC_BRAKE:
+                        return (255,255,0)
+                    else:
+                        return (255,0,0)
 
-            def circleColor(dist):
-                if dist < self.cfg.ADC_COUNTER:
-                    return (0,255,0)
-                elif dist < self.cfg.ADC_BRAKE:
-                    return (255,255,0)
-                else:
-                    return (255,0,0)
-
-            '''
-            cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
-            cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist1),1)
-            cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist2),1)
-            cv2.circle(img,(width//6*2,height//4*3),int(dist3*40),circleColor(dist3),1)
-            cv2.circle(img,(width//6*4,height//4*3),int(dist4*40),circleColor(dist4),1)
-            cv2.circle(img,(width//4*1,height//4*1),int(dist5*40),circleColor(dist5),1)
-            cv2.circle(img,(width//4*3,height//4*1),int(dist6*40),circleColor(dist6),1)
-            '''
-            x = int(width/2 * (1 + user_angle * 0.75))
-            cv2.circle(img,(x,height//2),int(dist0*40),circleColor(dist0),1)
-            cv2.putText(img,str(round(dist0,2)),(x,height//2),textFontFace,textFontScale,circleColor(dist0),textThickness)
+                i = 2+2+3+2+4+9+3+4+2
+                dist0 = float(row[i+0])
+                #cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
+                x = int(width/2 * (1 + user_angle * 0.75))
+                cv2.circle(img,(x,height//2),int(dist0*40),circleColor(dist0),1)
+                cv2.putText(img,str(round(dist0,2)),(x,height//2),textFontFace,textFontScale,circleColor(dist0),textThickness)
+                dist1 = float(row[i+1])
+                cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist1),1)
+                dist2 = float(row[i+2])
+                cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist2),1)
+                dist3 = float(row[i+3])
+                cv2.circle(img,(width//6*2,height//4*3),int(dist3*40),circleColor(dist3),1)
+                dist4 = float(row[i+4])
+                cv2.circle(img,(width//6*4,height//4*3),int(dist4*40),circleColor(dist4),1)
+                dist5 = float(row[i+5])
+                cv2.circle(img,(width//4*1,height//4*1),int(dist5*40),circleColor(dist5),1)
+                dist6 = float(row[i+6])
+                cv2.circle(img,(width//4*3,height//4*1),int(dist6*40),circleColor(dist6),1)
+            except:
+                pass
         
     def draw_model_prediction(self, record, img):
         '''

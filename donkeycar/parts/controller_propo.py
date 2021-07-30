@@ -282,9 +282,9 @@ class JoystickController(object):
         '''
         turn on recording when non zero throttle in the user mode.
         '''
-        if self.auto_record_on_throttle:
-            #self.recording = (abs(self.throttle) > self.dead_zone and self.mode == 'user')
-            self.recording  = (    self.throttle  > self.dead_zone * self.throttle_scale and self.mode == 'user')
+        #if self.auto_record_on_throttle:
+        #    #self.recording = (abs(self.throttle) > self.dead_zone and self.mode == 'user')
+        #    self.recording  = (    self.throttle  > self.dead_zone * self.throttle_scale and self.mode == 'user')
 
 
     def update(self):
@@ -564,7 +564,7 @@ class TTUJoystickController(JoystickController):
 
         self.gpio_pin_buzzer = 36 #GPIO20
         GPIO.setup(self.gpio_pin_buzzer, GPIO.OUT)
-        GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
+        GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
 
         self.gpio_pin_esc_on = 16 #GPIO23 22 #GPIO25
         GPIO.setup(self.gpio_pin_esc_on, GPIO.OUT)
@@ -736,8 +736,8 @@ class TTUJoystickController(JoystickController):
                     self.esc_sw_off()
                 elif(d[6] == 163 and d[7] == 0): #[>]
                     self.auto_record_on_throttle = True
-                    self.recording = False
-                    #self.recording = True
+                    #self.recording = False
+                    self.recording = True
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
                 elif(d[6] == 114 and d[7] == 0): #[-]
                     self.auto_record_on_throttle = False
@@ -794,6 +794,6 @@ class TTUJoystickController(JoystickController):
                 bz = False
 
             if bz:
-                GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
-                time.sleep(0.1)
                 GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
+                time.sleep(0.1)
+                GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)

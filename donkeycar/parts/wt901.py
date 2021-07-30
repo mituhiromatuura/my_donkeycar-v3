@@ -42,7 +42,7 @@ class Wt901:
 								self.acc['x'] = tmp1/32768*16
 								self.acc['y'] = tmp2/32768*16
 								self.acc['z'] = tmp3/32768*16
-								print("acc:",self.acc['x'],",",self.acc['y'],",",self.acc['z'])
+								#print("acc:",self.acc['x'],",",self.acc['y'],",",self.acc['z'])
 							else:
 								print("sum error:acc")
 
@@ -54,7 +54,7 @@ class Wt901:
 								self.gyro['x'] = tmp1/32768*2000
 								self.gyro['y'] = tmp2/32768*2000
 								self.gyro['z'] = tmp3/32768*2000
-								print("gyro:",self.gyro['x'],",",self.gyro['y'],",",self.gyro['z'])
+								#print("gyro:",self.gyro['x'],",",self.gyro['y'],",",self.gyro['z'])
 							else:
 								print("sum error:gyro")
 
@@ -66,7 +66,7 @@ class Wt901:
 								self.angl['x'] = tmp1/32768*180
 								self.angl['y'] = tmp2/32768*180
 								self.angl['z'] = tmp3/32768*180
-								print("angl:",self.angl['x'],",",self.angl['y'],",",self.angl['z'])
+								#print("angl:",self.angl['x'],",",self.angl['y'],",",self.angl['z'])
 							else:
 								print("sum error:angl")
 
@@ -78,7 +78,7 @@ class Wt901:
 								self.mag['x'] = tmp1
 								self.mag['y'] = tmp2
 								self.mag['z'] = tmp3
-								print("mag:",self.mag['x'],",",self.mag['y'],",",self.mag['z'])
+								#print("mag:",self.mag['x'],",",self.mag['y'],",",self.mag['z'])
 							else:
 								print("sum error:mag")
 
@@ -90,7 +90,7 @@ class Wt901:
 								self.q['x'] = tmp1/32768
 								self.q['y'] = tmp2/32768
 								self.q['z'] = tmp3/32768
-								print("q:",self.q['x'],",",self.q['y'],",",self.q['z'])
+								#print("q:",self.q['x'],",",self.q['y'],",",self.q['z'])
 							else:
 								print("sum error:q")
 

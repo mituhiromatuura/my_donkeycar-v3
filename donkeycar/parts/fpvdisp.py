@@ -39,11 +39,11 @@ class FPVDisp:
 
         self.gpio_pin_buzzer = 36 #GPIO20
         GPIO.setup(self.gpio_pin_buzzer, GPIO.OUT)
-        GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
-
         GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
-        time.sleep(0.5)
+
         GPIO.output(self.gpio_pin_buzzer, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
 
         #self.fullscreen = True
         self.disp_imu = True
@@ -473,6 +473,9 @@ class FPVDisp:
             x = int(wwidth/2 * (1 + self.angle * 0.75))
             cv2.circle(img,(x,wheight//2),int(self.dist0*40),circleColor(self.dist0),1)
             cv2.putText(img,str(round(self.dist0,2)),(x,wheight//2),textFontFace,textFontScale,circleColor(self.dist0),textThickness)
+
+            cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),circleColor(self.dist1),1)
+            cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),circleColor(self.dist2),1)
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red

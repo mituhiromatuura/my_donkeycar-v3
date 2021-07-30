@@ -161,7 +161,7 @@ class Log:
 		if self.n > 0:
 			print(self.sum / self.n)
 		else:
-			print("no log")
+			print("no log.csv")
 
 		f = open("/run/shm/mycar/data/log.csv","w")
 		f.write("n,ms,a,t,ua,ut,m,pa,pt,c1,c2,c3,c4,\
