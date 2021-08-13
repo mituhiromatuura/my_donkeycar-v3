@@ -15,6 +15,9 @@ else
   if [ $1 = "a" ]; then
     rm $DOUBLE
   fi
+  if [ $1 = "z" ]; then
+    rm $DOUBLE
+  fi
   if [ $1 = "m" ]; then
     rm $DOUBLE
   fi
@@ -47,6 +50,8 @@ fi
 
 if [ $1 != "m" -a $1 != "s" ]; then
 
+if [ $1 != "z" ]; then
+
 rm -r $MYCAR/
 mkdir $MYCAR
 mkdir $MYCAR/data
@@ -56,11 +61,6 @@ sudo pigpiod
 
 vcgencmd measure_clock arm
 vcgencmd measure_temp
-
-#if [ -e "/dev/ttyWt901c" ]; then
-#  stty -F /dev/ttyWt901c 9600
-#  stty -a -F /dev/ttyWt901c | grep speed
-#fi
 
 if [ $1 != "a" ]; then
   #python manage.py drive $1
@@ -79,6 +79,8 @@ sudo rm -rf /var/run/pigpio.pid
 
 vcgencmd measure_clock arm
 vcgencmd measure_temp
+
+fi
 
 read -p "Hit enter: sudo zip"
 
@@ -125,7 +127,7 @@ rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
 echo $str
 read -p "Hit enter: get model file"
 rsync -rtv --delete work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
-cp ./models/mypilot-aug.h5 ./logs/mypilot-aug_${ymdhm}.h5
-cp ./models/mypilot-aug.tflite ./logs/mypilot-aug_${ymdhm}.tflite
+cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
+cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
 
 rm $DOUBLE

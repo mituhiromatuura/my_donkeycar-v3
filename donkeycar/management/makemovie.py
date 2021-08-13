@@ -1,5 +1,4 @@
 import moviepy.editor as mpy
-'''
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 
@@ -11,7 +10,6 @@ try:
     from vis.optimizer import Optimizer
 except:
     raise Exception("Please install keras-vis: pip install git+https://github.com/autorope/keras-vis.git")
-'''
 
 import donkeycar as dk
 from donkeycar.parts.datastore import Tub
@@ -134,7 +132,7 @@ class MakeMovie(object):
         if self.csv_file == True:
             row = self.csv[self.iRec + 1]
 
-            try;
+            try:
                 i = 2+2+3+2+4+9
                 x = math.cos(math.radians(float(row[i+2]))) * height/2
                 y = math.sin(math.radians(float(row[i+2]))) * height/2
@@ -142,33 +140,35 @@ class MakeMovie(object):
             except:
                 pass
 
-            try;
+            try:
                 def circleColor(dist):
-                    if dist < self.cfg.ADC_COUNTER:
+                    if dist > self.cfg.DIST_COUNTER:
                         return (0,255,0)
-                    elif dist < self.cfg.ADC_BRAKE:
+                    elif dist > self.cfg.DIST_BRAKE:
                         return (255,255,0)
                     else:
                         return (255,0,0)
 
                 i = 2+2+3+2+4+9+3+4+2
                 dist0 = float(row[i+0])
+                dist4 = int(row[i+4])
                 #cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
                 x = int(width/2 * (1 + user_angle * 0.75))
-                cv2.circle(img,(x,height//2),int(dist0*40),circleColor(dist0),1)
-                cv2.putText(img,str(round(dist0,2)),(x,height//2),textFontFace,textFontScale,circleColor(dist0),textThickness)
+                cv2.circle(img,(x,height//2),int(dist0*40),circleColor(dist4),1)
+                if dist4 < 8000:
+                    cv2.putText(img,str(dist4),(x,height//2),textFontFace,textFontScale,circleColor(dist4),textThickness)
+
                 dist1 = float(row[i+1])
-                cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist1),1)
+                dist5 = int(row[i+5])
+                cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist5),1)
+                if dist5 < 8000:
+                    cv2.putText(img,str(dist5),(width//6*1,height//2),textFontFace,textFontScale,circleColor(dist5),textThickness)
+
                 dist2 = float(row[i+2])
-                cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist2),1)
-                dist3 = float(row[i+3])
-                cv2.circle(img,(width//6*2,height//4*3),int(dist3*40),circleColor(dist3),1)
-                dist4 = float(row[i+4])
-                cv2.circle(img,(width//6*4,height//4*3),int(dist4*40),circleColor(dist4),1)
-                dist5 = float(row[i+5])
-                cv2.circle(img,(width//4*1,height//4*1),int(dist5*40),circleColor(dist5),1)
-                dist6 = float(row[i+6])
-                cv2.circle(img,(width//4*3,height//4*1),int(dist6*40),circleColor(dist6),1)
+                dist6 = int(row[i+6])
+                cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist6),1)
+                if dist6 < 8000:
+                    cv2.putText(img,str(dist6),(width//6*5,height//2),textFontFace,textFontScale,circleColor(dist6),textThickness)
             except:
                 pass
         
@@ -293,11 +293,16 @@ class MakeMovie(object):
             pred_img = pred_img.reshape(pred_img.shape + (1,))
 
         salient_mask = self.compute_visualisation_mask(pred_img)
+        '''
         z = np.zeros_like(salient_mask)
         salient_mask_stacked = np.dstack((z, z))
         salient_mask_stacked = np.dstack((salient_mask_stacked, salient_mask))
         blend = cv2.addWeighted(img.astype('float32'), alpha, salient_mask_stacked, beta, 0.0)
-        return blend
+        #return blend
+        '''
+        salient_mask_stacked = np.dstack((salient_mask, salient_mask))
+        salient_mask_stacked = np.dstack((salient_mask_stacked, salient_mask))
+        return salient_mask_stacked
 
     def make_frame(self, t):
         '''

@@ -552,17 +552,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     throttle_scale,
                     ai_throttle_mult,
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
+
             if mode == 'user':
-                '''
-                if cfg.HAVE_PSOC_ADC:
-                    if user_throttle > 0:
-                        if max([dist0,dist1,dist2,dist3,dist4,dist5,dist6]) > cfg.DIST_BRAKE:
-                            user_throttle = user_throttle - max([dist0,dist1,dist2,dist3,dist4,dist5,dist6])
-                    if max([dist1,dist3,dist5]) > cfg.DIST_COUNTER:
-                        user_angle = user_angle + max([dist1,dist3,dist5])
-                    if max([dist2,dist4,dist6]) > cfg.DIST_COUNTER:
-                        user_angle = user_angle - max([dist2,dist4,dist6])
-                '''
+                if False: #cfg.HAVE_VL53L0X:
+                    if user_angle > 0:
+                        if dist5 > cfg.DIST_BRAKE:
+                            user_throttle = -0.1
+                    elif user_angle < 0:
+                        if dist6 > cfg.DIST_BRAKE:
+                            user_throttle = -0.1
                 return user_angle, user_throttle * throttle_scale
 
             elif mode == 'local_angle':

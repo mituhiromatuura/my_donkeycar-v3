@@ -444,23 +444,23 @@ class FPVDisp:
             cv2.circle(img,(wwidth//4*2,wheight//2),int(self.dist0*40),(0,255,0),1)
             cv2.circle(img,(wwidth//4*3,wheight//2),int(self.dist1*40),(0,255,0),1)
 
-        if self.cfg.HAVE_PSOC_ADC:
-            def circleColor(dist):
-                if dist < self.cfg.ADC_COUNTER:
+        if self.cfg.HAVE_VL53L0X:
+            def distColor(dist):
+                if dist > self.cfg.DIST_COUNTER:
                     return (0,255,0)
-                elif dist < self.cfg.ADC_BRAKE:
+                elif dist > self.cfg.DIST_BRAKE:
                     return (255,255,0)
                 else:
                     return (255,0,0)
 
             '''
-            cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),circleColor(self.dist0),1)
-            cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),circleColor(self.dist1),1)
-            cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),circleColor(self.dist2),1)
-            cv2.circle(img,(wwidth//6*2,wheight//4*3),int(self.dist3*40),circleColor(self.dist3),1)
-            cv2.circle(img,(wwidth//6*4,wheight//4*3),int(self.dist4*40),circleColor(self.dist4),1)
-            cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),circleColor(self.dist5),1)
-            cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),circleColor(self.dist6),1)
+            cv2.circle(img,(wwidth//4*2,wheight//4*2),int(self.dist0*40),distColor(self.dist0),1)
+            cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),distColor(self.dist1),1)
+            cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),distColor(self.dist2),1)
+            cv2.circle(img,(wwidth//6*2,wheight//4*3),int(self.dist3*40),distColor(self.dist3),1)
+            cv2.circle(img,(wwidth//6*4,wheight//4*3),int(self.dist4*40),distColor(self.dist4),1)
+            cv2.circle(img,(wwidth//4*1,wheight//4*1),int(self.dist5*40),distColor(self.dist5),1)
+            cv2.circle(img,(wwidth//4*3,wheight//4*1),int(self.dist6*40),distColor(self.dist6),1)
 
             cv2.putText(img,"0",(wwidth//4*2,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,"1",(wwidth//6*1,wheight//4*2),textFontFace,textFontScale,textColor,textThickness)
@@ -471,11 +471,22 @@ class FPVDisp:
             cv2.putText(img,"6",(wwidth//4*3,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
             '''
             x = int(wwidth/2 * (1 + self.angle * 0.75))
-            cv2.circle(img,(x,wheight//2),int(self.dist0*40),circleColor(self.dist0),1)
-            cv2.putText(img,str(round(self.dist0,2)),(x,wheight//2),textFontFace,textFontScale,circleColor(self.dist0),textThickness)
+            #cv2.circle(img,(x,wheight//2),int(self.dist0*40),distColor(self.dist4),1)
+            if self.dist4 < 8190:
+                xx = (80-int(self.dist4*80/1200))//2
+                cv2.line(img,(x-xx,wheight//3*2),(x+xx,wheight//3*2),distColor(self.dist4),2)
+                cv2.putText(img,str(self.dist4),(x,wheight//3*2),textFontFace,textFontScale,distColor(self.dist4),textThickness)
 
-            cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),circleColor(self.dist1),1)
-            cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),circleColor(self.dist2),1)
+            #cv2.circle(img,(wwidth//6*1,wheight//4*2),int(self.dist1*40),distColor(self.dist5),1)
+            if self.dist5 < 8190:
+                cv2.line(img,(0,wheight//4*3),(80-int(self.dist5*80/1200),wheight//4*3),(255,255,255),4)
+                cv2.line(img,(0,wheight//4*3),(80-int(self.dist5*80/1200),wheight//4*3),(0,0,0),2)
+                cv2.putText(img,str(self.dist5),(wwidth//6*1,wheight//4*3),textFontFace,textFontScale,distColor(self.dist5),textThickness)
+            #cv2.circle(img,(wwidth//6*5,wheight//4*2),int(self.dist2*40),distColor(self.dist6),1)
+            if self.dist6 < 8190:
+                cv2.line(img,(wwidth-1,wheight//4*3),(80+int(self.dist6*80/1200),wheight//4*3),(255,255,255),4)
+                cv2.line(img,(wwidth-1,wheight//4*3),(80+int(self.dist6*80/1200),wheight//4*3),(0,0,0),2)
+                cv2.putText(img,str(self.dist6),(wwidth//6*5,wheight//4*3),textFontFace,textFontScale,distColor(self.dist6),textThickness)
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red

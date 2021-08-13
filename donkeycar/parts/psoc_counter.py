@@ -12,6 +12,10 @@ class PsocCounter:
 		self.ch1 = 0
 		self.ch2 = 0
 		self.ch3 = 0
+		self.ch4 = 0
+		self.ch5 = 0
+		self.ch6 = 0
+		self.ch7 = 0
 
 	def update(self):
 		while self.on:
@@ -22,8 +26,8 @@ class PsocCounter:
 			self.uart = open(self.dev_rc,'rb')
 			print(self.dev_rc, "open")
 			while self.on:
-				d = self.uart.read(8)
-				self.ch0, self.ch1, self.ch2, self.ch3 = struct.unpack('HHHH', d)
+				d = self.uart.read(16)
+				self.ch0, self.ch1, self.ch2, self.ch3, self.ch4, self.ch5, self.ch6, self.ch7 = struct.unpack('HHHHHHHH', d)
 
 	def run_threaded(self):
 		rpm = 0

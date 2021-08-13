@@ -50,7 +50,7 @@ class Vl53l0x:
 					break
 
 	def conv(self, ad):
-		return max(0, 1000 - ad) / 1000
+		return max(0, 2000 - ad) / 2000
 
 	def run_threaded(self):
 		return \
@@ -58,10 +58,10 @@ class Vl53l0x:
 			self.conv(self.ad1), \
 			self.conv(self.ad2), \
 			self.conv(self.ad3), \
-			self.conv(self.ad4), \
-			self.conv(self.ad5), \
-			self.conv(self.ad6), \
-			self.conv(self.ad7)
+			self.ad0, \
+			self.ad1, \
+			self.ad2, \
+			self.ad3
 
 	def shutdown(self):
 		self.on = False

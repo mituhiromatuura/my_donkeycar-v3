@@ -9,7 +9,7 @@ import logging
 
 import threading, queue
 import RPi.GPIO as GPIO
-from donkeycar.parts.fram import Fram
+from donkeycar.parts.fram2 import Fram
 from donkeycar.parts.spi import Spi
 
 class Joystick(object):
@@ -169,7 +169,7 @@ class JoystickController(object):
         self.poll_delay = poll_delay
         self.running = True
         self.last_throttle_axis_val = 0
-        #self.throttle_scale = throttle_scale
+        self.throttle_scale = throttle_scale
         self.steering_scale = steering_scale
         self.throttle_dir = throttle_dir
         self.recording = False
@@ -192,9 +192,11 @@ class JoystickController(object):
         self.sw_r3 = False
 
         self.fram = Fram()
-        self.throttle_scale, self.have_fram = self.fram.read(0)
+        self.throttle_scale, self.have_fram = self.fram.read_f(0)
+        self.throttle_scale = round(self.throttle_scale, 1)
         if self.have_fram:
-            self.ai_throttle_mult, tmp = self.fram.read(1)
+            self.ai_throttle_mult, tmp = self.fram.read_f(1)
+            self.ai_throttle_mult = round(self.ai_throttle_mult, 1)
         else:
             self.throttle_scale = 1.0
             self.ai_throttle_mult = 1.0
@@ -340,12 +342,12 @@ class JoystickController(object):
             self.ai_throttle_mult = round(self.ai_throttle_mult - 0.1, 1)
             print("ai_throttle_mult", self.ai_throttle_mult)
             if self.have_fram:
-                self.fram.write(1, self.ai_throttle_mult)
+                self.fram.write_f(1, self.ai_throttle_mult)
         elif axis_val < 0 and self.ai_throttle_mult < 2.0:
             self.ai_throttle_mult = round(self.ai_throttle_mult + 0.1, 1)
             print("ai_throttle_mult", self.ai_throttle_mult)
             if self.have_fram:
-                self.fram.write(1, self.ai_throttle_mult)
+                self.fram.write_f(1, self.ai_throttle_mult)
 
 
     def toggle_manual_recording(self):
@@ -383,7 +385,7 @@ class JoystickController(object):
 
         print('throttle_scale:', self.throttle_scale)
         if self.have_fram:
-            self.fram.write(0, self.throttle_scale)
+            self.fram.write_f(0, self.throttle_scale)
 
 
     def decrease_max_throttle(self):
@@ -399,7 +401,7 @@ class JoystickController(object):
 
         print('throttle_scale:', self.throttle_scale)
         if self.have_fram:
-            self.fram.write(0, self.throttle_scale)
+            self.fram.write_f(0, self.throttle_scale)
 
 
     def increase_max_throttle_10(self):
@@ -415,7 +417,7 @@ class JoystickController(object):
 
         print('throttle_scale:', self.throttle_scale)
         if self.have_fram:
-            self.fram.write(0, self.throttle_scale)
+            self.fram.write_f(0, self.throttle_scale)
 
 
     def decrease_max_throttle_10(self):
@@ -431,7 +433,7 @@ class JoystickController(object):
 
         print('throttle_scale:', self.throttle_scale)
         if self.have_fram:
-            self.fram.write(0, self.throttle_scale)
+            self.fram.write_f(0, self.throttle_scale)
 
 
     '''
@@ -649,13 +651,13 @@ class TTUJoystickController(JoystickController):
         self.ai_throttle_mult = round(self.ai_throttle_mult - 0.1, 1)
         print("ai_throttle_mult", self.ai_throttle_mult)
         if self.have_fram:
-            self.fram.write(1, self.ai_throttle_mult)
+            self.fram.write_f(1, self.ai_throttle_mult)
 
     def inclease_ai_throttle_mult(self):
         self.ai_throttle_mult = round(self.ai_throttle_mult + 0.1, 1)
         print("ai_throttle_mult", self.ai_throttle_mult)
         if self.have_fram:
-            self.fram.write(1, self.ai_throttle_mult)
+            self.fram.write_f(1, self.ai_throttle_mult)
 
     def ft230x(self, dev_rc, name, q):
         import pigpio
