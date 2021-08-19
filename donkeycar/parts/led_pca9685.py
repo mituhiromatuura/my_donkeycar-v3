@@ -23,11 +23,12 @@ class LED:
         if not self.dev_ok:
             self.pca_init()
         if self.dev_ok:
+            sync_time = time.time()
             for pin in range(16):
                 if self.blink_rate[pin] == 0:
                     self.toggle(False, pin)
                 elif self.blink_rate[pin] > 0:
-                    self.blink(self.blink_rate[pin], pin, time.time())
+                    self.blink(self.blink_rate[pin], pin, sync_time)
                 else:
                     self.toggle(True, pin)
 

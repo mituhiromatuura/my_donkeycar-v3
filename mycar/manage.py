@@ -136,7 +136,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         else:
             raise(Exception("Unkown camera type: %s" % cfg.CAMERA_TYPE))
 
-        V.add(cam, inputs=inputs, outputs=['cam/image_array'], threaded=threaded)
+        V.add(cam, inputs=inputs, outputs=['cam/image_array_raw'], threaded=threaded)
 
     if (use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT) and cfg.CONTROLLER_TYPE == "TTU":
         from donkeycar.parts.controller_propo import TTUJoystickController
@@ -146,7 +146,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             steering_scale=cfg.JOYSTICK_STEERING_SCALE,
             auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
         V.add(ctr,
-            inputs=['cam/image_array'],
+            inputs=['cam/image_array_raw'],
             outputs =['user/anglex', 'user/throttlex', 'user/mode', 'recording',
                 'ch1x', 'ch2x', 'ch3x', 'ch4x',
                 'auto_record_on_throttle',
@@ -383,6 +383,19 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         from donkeycar.parts.vl53l0x import Vl53l0x
         V.add(Vl53l0x('/dev/ttyVl53'), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6','dist7'], threaded=True)
 
+    import cv2
+    class ImageDist:
+        def run(self, img, dist5, dist6):
+            width = 160
+            height = 120
+            cv2.line(img,(0,height//4*3),(80-int(dist5*80/1200),height//4*3),(0,0,0),6)
+            cv2.line(img,(0,height//4*3),(80-int(dist5*80/1200),height//4*3),(255,255,255),4)
+            cv2.line(img,(width-1,height//4*3),(80+int(dist6*80/1200),height//4*3),(0,0,0),6)
+            cv2.line(img,(width-1,height//4*3),(80+int(dist6*80/1200),height//4*3),(255,255,255),4)
+            return img
+
+    V.add(ImageDist(), inputs=['cam/image_array_raw', 'dist5', 'dist6'], outputs=['cam/image_array'])
+
     #LAMP
     if cfg.DRIVE_TRAIN_TYPE != "SERVO_ESC":
         from donkeycar.parts.lamp import LedCtrl
@@ -396,10 +409,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             'led/right',
             'led/head',
 
-            'led/head',
-            'led/head',
+            'led/left',
+            'led/right',
 
-            'led/head', #red out
+            'led/left', #red out
             'led/green', #green
             'led/blue', #blue
             'led/left', #yerrow
@@ -409,7 +422,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             'led/right', #yerrow
             'led/blue', #blue
             'led/green', #green
-            'led/head'], #red out
+            'led/right'], #red out
             threaded=False) #True)
 
     class ImgPreProcess():
@@ -799,7 +812,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(FPVDisp(cfg), 
             inputs=[
                 'user/mode',
-                'cam/image_array',
+                'cam/image_array_raw',
                 'angle',
                 'throttle',
                 'ch1',

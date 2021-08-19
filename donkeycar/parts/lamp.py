@@ -23,8 +23,8 @@ class LedCtrl:
 			tail = ON
 		#if throttle < self.cfg.JOYSTICK_DEADZONE:
 		if throttle < 0.2:
-			left = 0.5
-			right = 0.5
+			left = 0.4
+			right = 0.4
 		else:
 			left = OFF
 			right = OFF

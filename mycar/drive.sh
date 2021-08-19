@@ -9,19 +9,7 @@ if [ $1 = "0" ]; then
     exit
   fi
 else
-  if [ $1 = "d" ]; then
-    rm $DOUBLE
-  fi
-  if [ $1 = "a" ]; then
-    rm $DOUBLE
-  fi
-  if [ $1 = "z" ]; then
-    rm $DOUBLE
-  fi
-  if [ $1 = "m" ]; then
-    rm $DOUBLE
-  fi
-  if [ $1 = "s" ]; then
+  if [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ] || [ $1 = "s" ]; then
     rm $DOUBLE
   fi
 fi
@@ -48,86 +36,96 @@ if [ ! -e $LOGS ]; then
     LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
 fi
 
-if [ $1 != "m" -a $1 != "s" ]; then
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
+  rm -r $MYCAR/
+  mkdir $MYCAR
+  mkdir $MYCAR/data
 
-if [ $1 != "z" ]; then
+  rm ./models/*.png
+  sudo pigpiod
 
-rm -r $MYCAR/
-mkdir $MYCAR
-mkdir $MYCAR/data
+  vcgencmd measure_clock arm
+  vcgencmd measure_temp
 
-rm ./models/*.png
-sudo pigpiod
-
-vcgencmd measure_clock arm
-vcgencmd measure_temp
-
-if [ $1 != "a" ]; then
-  #python manage.py drive $1
-  python manage.py drive --js
-else
-  #python manage.py drive --model=./models/mypilot.h5 --js
-  if [ $2 == ""]; then
-    MODEL=./models/mypilot-aug.tflite
-  else
-    MODEL=$2
+  if [ $1 = "0" ] || [ $1 = "d" ]; then
+    python manage.py drive --js
   fi
-  python manage.py drive --model=$MODEL --type coral_tflite_linear --js
-fi
-sudo killall -9 pigpiod
-sudo rm -rf /var/run/pigpio.pid
+  if [ $1 = "a" ]; then
+    #python manage.py drive --model=./models/mypilot.h5 --js
+    if [ $2 == ""]; then
+      MODEL=./models/mypilot-aug.tflite
+    else
+      MODEL=$2
+    fi
+    python manage.py drive --model=$MODEL --type coral_tflite_linear --js
+  fi
+  sudo killall -9 pigpiod
+  sudo rm -rf /var/run/pigpio.pid
 
-vcgencmd measure_clock arm
-vcgencmd measure_temp
-
-fi
-
-read -p "Hit enter: sudo zip"
-
-cp config.py $MYCAR/
-cp myconfig.py $MYCAR/
-if [ $1 = "a" ]; then
-  cp -r ./models $MYCAR/
+  vcgencmd measure_clock arm
+  vcgencmd measure_temp
 fi
 
-pushd /run/shm
-if [ $1 != "a" ]; then
-  sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
-  sudo chown pi:pi $LOGS/log_${ymdhm}_drive.zip
-else
-  sudo zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
-  sudo chown pi:pi $LOGS/log_${ymdhm}_auto.zip
-fi
-popd
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ]; then
+  read -p "Hit enter: sudo zip"
 
-read -p "Hit enter: rsync log.csv"
-rsync -rtv --delete $MYCAR/data/log.csv work@$hostname.local:/Volumes/$ramdisk/
+  cp config.py $MYCAR/
+  cp myconfig.py $MYCAR/
+  if [ $1 = "a" ]; then
+    cp -r ./models $MYCAR/
+  fi
 
-fi
-if [ $1 != "s" ]; then
+  pushd /run/shm
+  if [ $1 != "a" ]; then
+    sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
+    sudo chown pi:pi $LOGS/log_${ymdhm}_drive.zip
+  else
+    sudo zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
+    sudo chown pi:pi $LOGS/log_${ymdhm}_auto.zip
+  fi
+  popd
 
-read -p "Hit enter: makemovie"
-if [ $1 != "a" ]; then
-  donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_drive.mp4 --scale 1
-  read -p "Hit enter: rsync movie"
-  rsync -rtv $LOGS/log_${ymdhm}_drive.mp4 work@$hostname.local:/Volumes/$ramdisk/
-else
-  donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_auto.mp4 --scale 1
-  read -p "Hit enter: rsync movie"
-  rsync -rtv $LOGS/log_${ymdhm}_auto.mp4 work@$hostname.local:/Volumes/$ramdisk/
+  read -p "Hit enter: rsync log.csv"
+  rsync -rtv --delete $MYCAR/data/log.csv work@$hostname.local:/Volumes/$ramdisk/
 fi
 
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ]; then
+  read -p "Hit enter: makemovie"
+  if [ $1 != "a" ]; then
+    donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_drive.mp4 --scale 1
+    read -p "Hit enter: rsync movie"
+    rsync -rtv $LOGS/log_${ymdhm}_drive.mp4 work@$hostname.local:/Volumes/$ramdisk/
+  else
+    donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_auto.mp4 --scale 1
+    read -p "Hit enter: rsync movie"
+    rsync -rtv $LOGS/log_${ymdhm}_auto.mp4 work@$hostname.local:/Volumes/$ramdisk/
+  fi
 fi
 
-read -p "Hit enter: updown"
-echo -n "input path: "
-read str
-rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ]; then
+  read -p "Hit enter: updown"
+  echo -n "input path: "
+  read str
+  rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
+fi
 
-echo $str
-read -p "Hit enter: get model file"
-rsync -rtv --delete work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
-cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
-cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ]; then
+  echo $str
+  read -p "Hit enter: get model file"
+  rsync -rtv --delete work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
+  cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
+  cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
+fi
+
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ] || [ $1 = "s" ]; then
+  read -p "Hit enter: makemovie salient"
+  echo -n "input start: "
+  read START
+  echo -n "input end: "
+  read END
+  donkey makemovie --type linear --tub $TUB/ --out $LOGS/log_${ymdhm}_salient.mp4 --scale 1 --salient --model ./models/mypilot-aug.h5 --start $START --end $END
+  read -p "Hit enter: rsync salient"
+  rsync -rtv $LOGS/log_${ymdhm}_salient.mp4 work@$hostname.local:/Volumes/$ramdisk/
+fi
 
 rm $DOUBLE
