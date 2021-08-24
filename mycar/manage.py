@@ -386,12 +386,14 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     import cv2
     class ImageDist:
         def run(self, img, dist5, dist6):
+            '''
             width = 160
             height = 120
             cv2.line(img,(0,height//4*3),(80-int(dist5*80/1200),height//4*3),(0,0,0),6)
             cv2.line(img,(0,height//4*3),(80-int(dist5*80/1200),height//4*3),(255,255,255),4)
             cv2.line(img,(width-1,height//4*3),(80+int(dist6*80/1200),height//4*3),(0,0,0),6)
             cv2.line(img,(width-1,height//4*3),(80+int(dist6*80/1200),height//4*3),(255,255,255),4)
+            '''
             return img
 
     V.add(ImageDist(), inputs=['cam/image_array_raw', 'dist5', 'dist6'], outputs=['cam/image_array'])
@@ -567,42 +569,31 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
 
             if mode == 'user':
-                if False: #cfg.HAVE_VL53L0X:
-                    if user_angle > 0:
-                        if dist5 > cfg.DIST_BRAKE:
-                            user_throttle = -0.1
-                    elif user_angle < 0:
-                        if dist6 > cfg.DIST_BRAKE:
-                            user_throttle = -0.1
-                return user_angle, user_throttle * throttle_scale
+                if user_throttle > 0:
+                    user_throttle = user_throttle * throttle_scale
+                    if cfg.HAVE_VL53L0X:
+                        if dist4 < cfg.DIST_STOP:
+                            user_throttle = -0.5
+                        elif dist4 < cfg.DIST_SLOW:
+                            user_throttle = user_throttle * 0.3
+                return user_angle, user_throttle
 
             elif mode == 'local_angle':
-                return pilot_angle if pilot_angle else 0.0, user_throttle * throttle_scale
+                pilot_angle = pilot_angle if pilot_angle else 0.0
+                user_throttle = user_throttle * throttle_scale
+                return pilot_angle, user_throttle
 
             else:
-                try:
-                    if cfg.HAVE_PSOC_ADC:
-                        if pilot_throttle > 0:
-                            '''
-                            if max([dist0,dist3,dist4]) > cfg.DIST_BRAKE:
-                                pilot_throttle = pilot_throttle - max([dist0,dist3,dist4])
-
-                            if dist1 > cfg.DIST_COUNTER and pilot_angle < cfg.DIST_COUNTER:
-                                pilot_angle = pilot_angle + dist1
-                            elif dist2 > cfg.DIST_COUNTER and pilot_angle > cfg.DIST_COUNTER * -1:
-                                pilot_angle = pilot_angle - dist2
-                            '''
-                            if dist0 > cfg.DIST_BRAKE:
-                                #if dist0 > 1:
-                                #    dist0 = 1
-                                #elif dist0 < cfg.DIST_BRAKE:
-                                #    dist0 = 0
-                                pilot_throttle = -0.1 #pilot_throttle * min((1 - dist0),1)
-                except:
-                    pass
+                pilot_angle = pilot_angle if pilot_angle else 0.0
+                pilot_throttle = pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
                 if user_throttle > throttle_scale * 0.9:
-                    return pilot_angle if pilot_angle else 0.0, -0.5
-                return pilot_angle if pilot_angle else 0.0, pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
+                    return pilot_angle, -0.5
+                if cfg.HAVE_VL53L0X:
+                    if dist4 < cfg.DIST_STOP:
+                        pilot_throttle = -0.5
+                    elif dist4 < cfg.DIST_SLOW:
+                        pilot_throttle = user_throttle * 0.3
+                return pilot_angle, pilot_throttle
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',

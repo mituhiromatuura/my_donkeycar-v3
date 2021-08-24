@@ -41,7 +41,6 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   mkdir $MYCAR
   mkdir $MYCAR/data
 
-  rm ./models/*.png
   sudo pigpiod
 
   vcgencmd measure_clock arm
@@ -112,7 +111,7 @@ fi
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ]; then
   echo $str
   read -p "Hit enter: get model file"
-  rsync -rtv --delete work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
+  rsync -rtv work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
   cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
   cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
 fi

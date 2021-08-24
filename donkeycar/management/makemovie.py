@@ -154,21 +154,21 @@ class MakeMovie(object):
                 dist4 = int(row[i+4])
                 #cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
                 x = int(width/2 * (1 + user_angle * 0.75))
-                cv2.circle(img,(x,height//2),int(dist0*40),circleColor(dist4),1)
+                cv2.circle(img,(x,height//5*2),int(dist0*40),circleColor(dist4),1)
                 if dist4 < 8000:
-                    cv2.putText(img,str(dist4),(x,height//2),textFontFace,textFontScale,circleColor(dist4),textThickness)
+                    cv2.putText(img,str(dist4),(x,height//5*2),textFontFace,textFontScale,circleColor(dist4),textThickness)
 
                 dist1 = float(row[i+1])
                 dist5 = int(row[i+5])
-                cv2.circle(img,(width//6*1,height//4*2),int(dist1*40),circleColor(dist5),1)
+                cv2.circle(img,(width//6*1,height//5*3),int(dist1*40),circleColor(dist5),1)
                 if dist5 < 8000:
-                    cv2.putText(img,str(dist5),(width//6*1,height//2),textFontFace,textFontScale,circleColor(dist5),textThickness)
+                    cv2.putText(img,str(dist5),(width//6*1,height//5*3),textFontFace,textFontScale,circleColor(dist5),textThickness)
 
                 dist2 = float(row[i+2])
                 dist6 = int(row[i+6])
-                cv2.circle(img,(width//6*5,height//4*2),int(dist2*40),circleColor(dist6),1)
+                cv2.circle(img,(width//6*5,height//5*3),int(dist2*40),circleColor(dist6),1)
                 if dist6 < 8000:
-                    cv2.putText(img,str(dist6),(width//6*5,height//2),textFontFace,textFontScale,circleColor(dist6),textThickness)
+                    cv2.putText(img,str(dist6),(width//6*5,height//5*3),textFontFace,textFontScale,circleColor(dist6),textThickness)
             except:
                 pass
         
