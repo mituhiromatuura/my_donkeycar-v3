@@ -42,6 +42,9 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   mkdir $MYCAR/data
 
   sudo pigpiod
+  #sudo rfcomm --raw connect 0 24:0A:C4:0F:EC:22 1 &
+  #sudo rfcomm --raw connect 0 40:F5:20:53:5C:7E 1 &
+  sudo rfcomm --raw connect 0 24:0A:C4:F6:68:22 1 &
 
   vcgencmd measure_clock arm
   vcgencmd measure_temp

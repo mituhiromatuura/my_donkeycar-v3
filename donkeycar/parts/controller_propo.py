@@ -4,7 +4,6 @@ import array
 import time
 import struct
 import random
-from threading import Thread
 import logging
 
 import threading, queue
