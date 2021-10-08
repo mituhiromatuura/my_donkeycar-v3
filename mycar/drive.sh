@@ -2,6 +2,10 @@
 
 DOUBLE="/run/shm/doublestart.txt"
 
+#DDPROG="work@220.209.135.48"
+DDPROG="work@ddprog.aa0.netvolante.jp"
+#DDPROG="work@ddprog.mydns.jp"
+
 if [ $1 = "0" ]; then
   FILE="/run/shm/autostart.txt"
   if [ ! -e $FILE ]; then
@@ -108,13 +112,13 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] 
   read -p "Hit enter: updown"
   echo -n "input path: "
   read str
-  rsync -rtv $MYCAR work@ddprog.mydns.jp:/run/shm/$str/
+  time rsync -rtz --compress-level=9 $MYCAR $DDPROG:/run/shm/$str/
 fi
 
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ]; then
   echo $str
   read -p "Hit enter: get model file"
-  rsync -rtv work@ddprog.mydns.jp:/run/shm/$str/mycar/models ./
+  time rsync -rtz --compress-level=9 $DDPROG:/run/shm/$str/mycar/models ./
   cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
   cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
 fi

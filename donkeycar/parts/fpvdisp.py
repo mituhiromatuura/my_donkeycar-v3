@@ -35,7 +35,10 @@ class FPVDisp:
 
         self.gpio_pin_vtb_on = 11 #GPIO17
         GPIO.setup(self.gpio_pin_vtb_on, GPIO.OUT)
-        GPIO.output(self.gpio_pin_vtb_on, GPIO.LOW)
+        if self.cfg.VTB_ON:
+            GPIO.output(self.gpio_pin_vtb_on, GPIO.HIGH)
+        else:
+            GPIO.output(self.gpio_pin_vtb_on, GPIO.LOW)
 
         self.gpio_pin_buzzer = 36 #GPIO20
         GPIO.setup(self.gpio_pin_buzzer, GPIO.OUT)
@@ -47,7 +50,7 @@ class FPVDisp:
 
         #self.fullscreen = True
         self.disp_imu = True
-        self.disp_callsign = False
+        self.disp_callsign = self.cfg.VTB_ON
         self.on = True
         '''
         self.executor = concurrent.futures.ProcessPoolExecutor(max_workers=1)

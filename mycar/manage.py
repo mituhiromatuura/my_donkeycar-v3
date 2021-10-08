@@ -34,6 +34,10 @@ from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
 
+import queue
+q_controller = queue.Queue()
+q_rfcomm = queue.Queue()
+
 def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type='single', meta=[]):
     '''
     Construct a working robotic vehicle from many parts.
@@ -60,6 +64,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     #Initialize car
     V = dk.vehicle.Vehicle()
+
+    from donkeycar.parts.rfcomm import RfComm
+    V.add(RfComm(cfg, q_rfcomm), threaded=True)
 
     from donkeycar.parts.period_time import PeriodTime
     V.add(PeriodTime(cfg), inputs=['user/mode'], outputs=['period_time'])
@@ -141,6 +148,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     if (use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT) and cfg.CONTROLLER_TYPE == "TTU":
         from donkeycar.parts.controller_propo import TTUJoystickController
         ctr = TTUJoystickController(
+            q_rfcomm,
             throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
             throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
             steering_scale=cfg.JOYSTICK_STEERING_SCALE,
@@ -408,23 +416,22 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(LED(), inputs=[
             'led/head',
             'led/left',
+            'led/tail', #red in
+            'led/left',
+            'led/right',
+            'led/tail', #red in
             'led/right',
             'led/head',
 
-            'led/left',
-            'led/right',
-
-            'led/left', #red out
             'led/green', #green
-            'led/blue', #blue
+            'led/head', #red out
             'led/left', #yerrow
-            'led/tail', #red in
-
-            'led/tail', #red in
-            'led/right', #yerrow
             'led/blue', #blue
-            'led/green', #green
-            'led/right'], #red out
+
+            'led/blue', #blue
+            'led/right', #yerrow
+            'led/head', #red out
+            'led/green'], #green
             threaded=False) #True)
 
     class ImgPreProcess():
@@ -858,7 +865,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if cfg.HAVE_BUZZER:
         from donkeycar.parts.buzzer import Buzzer
-        V.add(Buzzer(cfg), inputs=['user/mode', 'tub/num_records'])
+        V.add(Buzzer(cfg, q_rfcomm), inputs=['user/mode', 'tub/num_records'])
 
     if True:
         from donkeycar.parts.log import Log

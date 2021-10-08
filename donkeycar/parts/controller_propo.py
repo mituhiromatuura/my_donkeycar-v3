@@ -556,10 +556,11 @@ class TTUJoystickController(JoystickController):
     '''
     A Controller object that maps inputs to actions
     '''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, q_rfcomm, *args, **kwargs):
         super(TTUJoystickController, self).__init__(*args, **kwargs)
 
         self.spi = Spi()
+        self.q_rfcomm = q_rfcomm
 
         GPIO.setmode(GPIO.BOARD)
 
@@ -583,6 +584,12 @@ class TTUJoystickController(JoystickController):
         GPIO.setup(gpio_pin_int, GPIO.IN, GPIO.PUD_DOWN)
         GPIO.add_event_detect(gpio_pin_int, GPIO.RISING)
         GPIO.add_event_callback(gpio_pin_int, self.callback)
+
+        self.q_rfcomm.put("MODE:" + self.mode)
+        self.q_rfcomm.put("MAXTS:" + str(self.throttle_scale))
+        self.q_rfcomm.put("AITM:" + str(self.ai_throttle_mult))
+        self.q_rfcomm.put('ESC_OFF')
+        self.q_rfcomm.put('REC_OFF')
 
     def callback(self, channel):
         GPIO.setmode(GPIO.BOARD)
@@ -733,17 +740,21 @@ class TTUJoystickController(JoystickController):
                     self.lat1 = True
                 elif(d[6] == 115 and d[7] == 0): #[+]
                     self.esc_sw_on()
+                    self.q_rfcomm.put('ESC_ON')
                 elif(d[6] == 165 and d[7] == 0): #[<]
                     self.esc_sw_off()
+                    self.q_rfcomm.put('ESC_OFF')
                 elif(d[6] == 163 and d[7] == 0): #[>]
                     self.auto_record_on_throttle = True
                     #self.recording = False
                     self.recording = True
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
+                    self.q_rfcomm.put('REC_ON')
                 elif(d[6] == 114 and d[7] == 0): #[-]
                     self.auto_record_on_throttle = False
                     self.recording = False
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
+                    self.q_rfcomm.put('REC_OFF')
                 elif(d[6] == 164 and d[7] == 0): #[||]
                     self.esc_sw_off()
                     self.auto_record_on_throttle = False
@@ -752,6 +763,10 @@ class TTUJoystickController(JoystickController):
                     self.constant_throttle = False
                     self.throttle = 0
                     self.on_throttle_changes()
+
+                    self.q_rfcomm.put("MODE:" + self.mode)
+                    self.q_rfcomm.put('ESC_OFF')
+                    self.q_rfcomm.put('REC_OFF')
                 else:
                     bz = False
 
@@ -762,12 +777,15 @@ class TTUJoystickController(JoystickController):
                     self.lat2 = True
                 elif(d[6] == 115 and d[7] == 0): #[+]
                     self.mode = 'local_angle'
+                    self.q_rfcomm.put("MODE:" + self.mode)
                 elif(d[6] == 165 and d[7] == 0): #[<]
                     self.mode = 'local'
+                    self.q_rfcomm.put("MODE:" + self.mode)
                 elif(d[6] == 163 and d[7] == 0): #[>]
                     self.toggle_constant_throttle()
                 elif(d[6] == 114 and d[7] == 0): #[-]
                     self.mode = 'user'
+                    self.q_rfcomm.put("MODE:" + self.mode)
                 elif(d[6] == 164 and d[7] == 0): #[||]
                     '''
                     self.mode = 'user'
@@ -782,12 +800,16 @@ class TTUJoystickController(JoystickController):
                     self.lat3 = True
                 elif(d[6] == 115 and d[7] == 0): #[+]
                     self.increase_max_throttle_10()
+                    self.q_rfcomm.put("MAXTS:" + str(self.throttle_scale))
                 elif(d[6] == 165 and d[7] == 0): #[<]
                     self.decrease_max_throttle_10()
+                    self.q_rfcomm.put("MAXTS:" + str(self.throttle_scale))
                 elif(d[6] == 163 and d[7] == 0): #[>]
                     self.inclease_ai_throttle_mult()
+                    self.q_rfcomm.put("AITM:" + str(self.ai_throttle_mult))
                 elif(d[6] == 114 and d[7] == 0): #[-]
                     self.decrease_ai_throttle_mult()
+                    self.q_rfcomm.put("AITM:" + str(self.ai_throttle_mult))
                 else:
                     bz = False
 

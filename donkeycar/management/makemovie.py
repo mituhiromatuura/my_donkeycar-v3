@@ -132,13 +132,13 @@ class MakeMovie(object):
         if self.csv_file == True:
             row = self.csv[self.iRec + 1]
 
-            try:
-                i = 2+2+3+2+4+9
-                x = math.cos(math.radians(float(row[i+2]))) * height/2
-                y = math.sin(math.radians(float(row[i+2]))) * height/2
-                cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
-            except:
-                pass
+            #try:
+            #    i = 2+2+3+2+4+9
+            #    x = math.cos(math.radians(float(row[i+2]))) * height/2
+            #    y = math.sin(math.radians(float(row[i+2]))) * height/2
+            #    cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
+            #except:
+            #    pass
 
             try:
                 def circleColor(dist):
@@ -328,9 +328,9 @@ class MakeMovie(object):
             image = image.astype('uint8')
         
         self.draw_user_input(rec, image)
-        if self.keras_part is not None:
-            self.draw_model_prediction(rec, image)
-            self.draw_steering_distribution(rec, image)
+        #if self.keras_part is not None:
+        #    self.draw_model_prediction(rec, image)
+        #    self.draw_steering_distribution(rec, image)
 
         if self.scale != 1:
             import cv2
