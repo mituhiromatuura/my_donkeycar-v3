@@ -1,6 +1,7 @@
 import time
 import os
 import re
+import RPi.GPIO as GPIO
 
 class Vl53l0x:
 
@@ -15,6 +16,13 @@ class Vl53l0x:
 		self.ad5 = 0
 		self.ad6 = 0
 		self.ad7 = 0
+
+		self.gpio_pin = 12 #GPIO18
+		GPIO.setup(self.gpio_pin, GPIO.OUT)
+		GPIO.output(self.gpio_pin, GPIO.LOW)
+		time.sleep(0.5)
+		GPIO.output(self.gpio_pin, GPIO.HIGH)
+		time.sleep(0.5)
 
 	def update(self):
 		while self.on:
@@ -44,6 +52,9 @@ class Vl53l0x:
 						self.ad6 = int(l[1])
 					elif "7:" in s:
 						self.ad7 = int(l[1])
+				except KeyboardInterrupt:
+					self.on = False
+					print("KeyboardInterrupt:Vl53l0x")
 				except:
 					self.on = False
 					print(self.dev_rc, " error")
@@ -55,13 +66,7 @@ class Vl53l0x:
 	def run_threaded(self):
 		return \
 			self.conv(self.ad0), \
-			self.conv(self.ad1), \
-			self.conv(self.ad2), \
-			self.conv(self.ad3), \
-			self.ad0, \
-			self.ad1, \
-			self.ad2, \
-			self.ad3
+			self.ad0
 
 	def shutdown(self):
 		self.on = False

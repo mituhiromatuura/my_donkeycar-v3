@@ -2,9 +2,10 @@
 
 DOUBLE="/run/shm/doublestart.txt"
 
-#DDPROG="work@220.209.135.48"
-DDPROG="work@ddprog.aa0.netvolante.jp"
-#DDPROG="work@ddprog.mydns.jp"
+#DDPROG="work@192.168.179.3"
+#DDPROG="work@G5-5090.local"
+#DDPROG="work@ddprog.aa0.netvolante.jp"
+DDPROG="work@ddprog.mydns.jp"
 
 if [ $1 = "0" ]; then
   FILE="/run/shm/autostart.txt"
@@ -48,7 +49,11 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   sudo pigpiod
   #sudo rfcomm --raw connect 0 24:0A:C4:0F:EC:22 1 &
   #sudo rfcomm --raw connect 0 40:F5:20:53:5C:7E 1 &
-  sudo rfcomm --raw connect 0 24:0A:C4:F6:68:22 1 &
+  #sudo rfcomm --raw connect 0 24:0A:C4:F6:68:22 1 &
+  #NodeMCU
+  sudo rfcomm --raw connect 0 7C:9E:BD:65:B7:BA 1 &
+  #AE-ESP32-WROOM-32E-MINI
+  #sudo rfcomm --raw connect 0 34:AB:95:5C:82:0A 1 &
 
   vcgencmd measure_clock arm
   vcgencmd measure_temp
@@ -85,9 +90,11 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ]; then
   if [ $1 != "a" ]; then
     sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
     sudo chown pi:pi $LOGS/log_${ymdhm}_drive.zip
+    cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_drive.csv
   else
     sudo zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
     sudo chown pi:pi $LOGS/log_${ymdhm}_auto.zip
+    cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_auto.csv
   fi
   popd
 
@@ -123,7 +130,7 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] 
   cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
 fi
 
-if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ] || [ $1 = "s" ]; then
+if [ $1 = "s" ]; then
   read -p "Hit enter: makemovie salient"
   echo -n "input start: "
   read START

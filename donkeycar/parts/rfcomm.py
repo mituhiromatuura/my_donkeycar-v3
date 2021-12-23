@@ -2,18 +2,20 @@ import time
 import queue
 import socket
 import subprocess
+import threading, queue
 
 class RfComm:
 
-	def __init__(self, cfg, q_rfcomm):
+	def __init__(self, cfg, q_rfcomm, q_button):
 		self.cfg = cfg
 		self.q_rfcomm = q_rfcomm
+		self.q_button = q_button
 		self.on = True
 
 		try:
 			self.dev_rc = '/dev/rfcomm0'
 			self.bt = open(self.dev_rc, 'w')
-			print(self.dev_rc, "open")
+			print(self.dev_rc, "w open")
 
 			host = socket.gethostname()
 			print(host)
@@ -34,17 +36,39 @@ class RfComm:
 			ip = ifconfig[idx0 + 5:idx1]
 			print(ip)
 			self.bt.write("IP:" + ip + "\n")
+
+			threading.Thread(target=self.bt_rx).start()
 		except:
 			print(self.dev_rc, "none")
 			self.on = False
 
 	def update(self):
-		while self.on:
-			s = self.q_rfcomm.get()
-			self.bt.write(s + "\n")
+		try:
+			while self.on:
+				s = self.q_rfcomm.get()
+				self.bt.write(s + "\n")
+		except:
+			print(self.dev_rc, "none(tx)")
+			self.on = False
 
 	def run_threaded(self):
 		return
 
 	def shutdown(self):
 		self.on = False
+
+	def bt_rx(self):
+		try:
+			bt = open(self.dev_rc, 'r')
+			print(self.dev_rc, "r open")
+			while self.on:
+				s = bt.readline()
+				#print(s.encode())
+				if len(s) < 3:
+					break
+				self.q_button.put([0,s])
+		except:
+			pass
+		print(self.dev_rc, "none(rx)")
+		self.on = False
+		print(self.dev_rc, "bt_rx() end")

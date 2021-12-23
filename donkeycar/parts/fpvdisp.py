@@ -3,11 +3,13 @@ import time
 import numpy as np
 import cv2
 import concurrent.futures
+import queue
 import RPi.GPIO as GPIO
 
 class FPVDisp:
-    def __init__(self, cfg):
+    def __init__(self, cfg, q_button):
         self.cfg = cfg
+        self.q_button = q_button
         self.time = time.time()
         self.rectime = time.time()
         self.executor_on = False
@@ -98,6 +100,10 @@ class FPVDisp:
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
+        auto_throttle_off,
+        dist_slow,
+        dist_stop,
+        auto_throttle_off,
         disp_on,
         esc_on,
         sw_l3,
@@ -107,6 +113,7 @@ class FPVDisp:
         lat1,
         lat2,
         lat3,
+        lat4,
         period_time):
 
         self.executor_on = True
@@ -151,6 +158,10 @@ class FPVDisp:
         self.constant_throttle = constant_throttle
         self.throttle_scale = throttle_scale
         self.ai_throttle_mult = ai_throttle_mult
+        self.auto_throttle_off = auto_throttle_off
+        self.dist_slow = dist_slow
+        self.dist_stop = dist_stop
+        self.dist_throttle_off = dist_throttle_off
         self.disp_on = disp_on
         self.esc_on = esc_on
         self.sw_l3 = sw_l3
@@ -160,6 +171,7 @@ class FPVDisp:
         self.lat1 = lat1
         self.lat2 = lat2
         self.lat3 = lat3
+        self.lat4 = lat4
         self.period_time = period_time
     '''
 
@@ -204,6 +216,10 @@ class FPVDisp:
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
+        auto_throttle_off,
+        dist_slow,
+        dist_stop,
+        dist_throttle_off,
         disp_on,
         esc_on,
         sw_l3,
@@ -213,6 +229,7 @@ class FPVDisp:
         lat1,
         lat2,
         lat3,
+        lat4,
         period_time):
 
         if self.on:
@@ -256,6 +273,10 @@ class FPVDisp:
             self.constant_throttle = constant_throttle
             self.throttle_scale = throttle_scale
             self.ai_throttle_mult = ai_throttle_mult
+            self.auto_throttle_off = auto_throttle_off
+            self.dist_slow = dist_slow
+            self.dist_stop = dist_stop
+            self.dist_throttle_off = dist_throttle_off
             self.disp_on = disp_on
             self.esc_on = esc_on
             self.sw_l3 = sw_l3,
@@ -265,6 +286,7 @@ class FPVDisp:
             self.lat1 = lat1
             self.lat2 = lat2
             self.lat3 = lat3
+            self.lat4 = lat4
             self.period_time = period_time
 
             #self.executor.submit(self.disp_main())
@@ -279,6 +301,9 @@ class FPVDisp:
     '''
 
     def disp_main(self):
+        #if self.mode == 'local':
+        #    return
+
         if self.constant_throttle:
             GPIO.output(self.gpio_pin_const, self.led_on)
         else:
@@ -375,10 +400,15 @@ class FPVDisp:
 
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.auto_throttle_off),(0,39),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.dist_stop),(0,59),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.dist_throttle_off),(0,69),textFontFace,textFontScale,textColor,textThickness)
 
         cv2.putText(img,'o',(60,wheight-1),textFontFace,textFontScale,textColor if self.lat1 else (255,255,0),textThickness)
         cv2.putText(img,'o',(50,wheight-1),textFontFace,textFontScale,textColor if self.lat2 else (255,255,0),textThickness)
         cv2.putText(img,'o',(55,wheight-11),textFontFace,textFontScale,textColor if self.lat3 else (255,255,0),textThickness)
+        cv2.putText(img,'o',(40,wheight-1),textFontFace,textFontScale,textColor if self.lat4 else (255,255,0),textThickness)
 
         if self.stop == True:
             cv2.putText(img,'STOP',(65,69),textFontFace,textFontScale,(255,0,0),textThickness)
@@ -397,6 +427,7 @@ class FPVDisp:
         cv2.putText(img,str(self.spi_angle),(90,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.spi_throttle),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.spi_revcount),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:
             #if self.disp_imu:
@@ -449,9 +480,9 @@ class FPVDisp:
 
         if self.cfg.HAVE_VL53L0X:
             def distColor(dist):
-                if dist > self.cfg.DIST_SLOW:
+                if dist > self.dist_slow:
                     return (0,255,0)
-                elif dist > self.cfg.DIST_STOP:
+                elif dist > self.dist_stop:
                     return (255,255,0)
                 else:
                     return (255,0,0)
@@ -474,12 +505,15 @@ class FPVDisp:
             cv2.putText(img,"6",(wwidth//4*3,wheight//4*1),textFontFace,textFontScale,textColor,textThickness)
             '''
             x = int(wwidth/2 * (1 + self.angle * 0.75))
-            cv2.circle(img,(x,wheight//5*2),int(self.dist0*40),distColor(self.dist4),1)
-            if self.dist4 < 8190:
-                xx = (80-int(self.dist4*80/1200))//2
+            cv2.circle(img,(x,wheight//2),int(self.dist0*40),distColor(self.dist4),1)
+            if self.dist4 == 65535:
+                cv2.putText(img,"ERROR",(x,wheight//2),textFontFace,textFontScale,(255,0,0),textThickness)
+            elif self.dist4 < 8190:
+                #xx = (80-int(self.dist4*80/1200))//2
                 #cv2.line(img,(x-xx,wheight//3*2),(x+xx,wheight//3*2),distColor(self.dist4),2)
-                cv2.putText(img,str(self.dist4),(x,wheight//5*2),textFontFace,textFontScale,distColor(self.dist4),textThickness)
+                cv2.putText(img,str(self.dist4),(x,wheight//2),textFontFace,textFontScale,distColor(self.dist4),textThickness)
 
+            '''
             cv2.circle(img,(wwidth//6*1,wheight//5*3),int(self.dist1*40),distColor(self.dist5),1)
             if self.dist5 < 8190:
                 #cv2.line(img,(0,wheight//4*3),(80-int(self.dist5*80/1200),wheight//4*3),(255,255,255),4)
@@ -490,6 +524,7 @@ class FPVDisp:
                 #cv2.line(img,(wwidth-1,wheight//4*3),(80+int(self.dist6*80/1200),wheight//4*3),(255,255,255),4)
                 #cv2.line(img,(wwidth-1,wheight//4*3),(80+int(self.dist6*80/1200),wheight//4*3),(0,0,0),2)
                 cv2.putText(img,str(self.dist6),(wwidth//6*5,wheight//5*3),textFontFace,textFontScale,distColor(self.dist6),textThickness)
+            '''
 
         if self.period_time - 1 > 1000 / self.cfg.DRIVE_LOOP_HZ:
             period_color = (255,0,0) #red
@@ -514,7 +549,9 @@ class FPVDisp:
         cv2.imshow('DonkeyCamera', img[:,:,::-1])
 
         wk = cv2.waitKey(1) & 0xff
-        if wk == ord('q'):
+        #if wk != 255:
+        #    print(wk)
+        if wk == ord('q') or wk == 27: #esc
             cv2.destroyAllWindows()
             self.on = False
         #elif wk == ord('w'):
@@ -532,11 +569,47 @@ class FPVDisp:
                 self.disp_callsign = False
             else:
                 self.disp_callsign = True
+        elif wk == ord('p'):
+            self.q_button.put([99,'p'])
+        elif wk == ord('P'):
+            self.q_button.put([99,'P'])
+        elif wk == ord('r'):
+            self.q_button.put([99,'r'])
+        elif wk == ord('R'):
+            self.q_button.put([99,'R'])
+        elif wk == ord('u'):
+            self.q_button.put([99,'u'])
+        elif wk == ord('l'):
+            self.q_button.put([99,'l'])
+        elif wk == ord('/') or wk == 175:
+            self.q_button.put([99,'/'])
+        elif wk == ord('=') or wk == 157:
+            self.q_button.put([99,'='])
+        elif wk == ord('9') or wk == 185:
+            self.q_button.put([99,'9'])
+        elif wk == ord('8') or wk == 184:
+            self.q_button.put([99,'8'])
+        elif wk == ord('6') or wk == 182:
+            self.q_button.put([99,'6'])
+        elif wk == ord('5') or wk == 181:
+            self.q_button.put([99,'5'])
+        elif wk == ord('3') or wk == 179:
+            self.q_button.put([99,'3'])
+        elif wk == ord('2') or wk == 178:
+            self.q_button.put([99,'2'])
+        elif wk == ord('.') or wk == 174:
+            self.q_button.put([99,'.'])
+        elif wk == ord('0') or wk == 176:
+            self.q_button.put([99,'0'])
+        elif wk == ord('+') or wk == 171:
+            self.q_button.put([99,'+'])
+        elif wk == ord('-') or wk == 173:
+            self.q_button.put([99,'-'])
 
     def shutdown(self):
         self.on = False
         GPIO.cleanup()
         print("FPVDisp shutdown")
 
-    def __del__(self):
-        cv2.destroyAllWindows()
+    #def __del__(self):
+    #    cv2.destroyAllWindows()

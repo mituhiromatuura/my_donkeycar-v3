@@ -35,7 +35,7 @@ from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
 
 import queue
-q_controller = queue.Queue()
+q_button = queue.Queue()
 q_rfcomm = queue.Queue()
 
 def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type='single', meta=[]):
@@ -66,7 +66,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     V = dk.vehicle.Vehicle()
 
     from donkeycar.parts.rfcomm import RfComm
-    V.add(RfComm(cfg, q_rfcomm), threaded=True)
+    V.add(RfComm(cfg, q_rfcomm, q_button), threaded=True)
 
     from donkeycar.parts.period_time import PeriodTime
     V.add(PeriodTime(cfg), inputs=['user/mode'], outputs=['period_time'])
@@ -148,6 +148,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     if (use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT) and cfg.CONTROLLER_TYPE == "TTU":
         from donkeycar.parts.controller_propo import TTUJoystickController
         ctr = TTUJoystickController(
+            q_button,
             q_rfcomm,
             throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
             throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
@@ -161,6 +162,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'constant_throttle',
                 'throttle_scale',
                 'ai_throttle_mult',
+                'auto_throttle_off',
+                'dist_slow',
+                'dist_stop',
+                'dist_throttle_off',
                 'disp_on',
                 'esc_on',
                 'sw_l3',
@@ -168,7 +173,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'VTXPower_value',
                 'lat1',
                 'lat2',
-                'lat3'],
+                'lat3',
+                'lat4'],
             threaded=True)
 
         from donkeycar.parts.psoc_counter import PsocCounter
@@ -389,7 +395,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #Vl53l0x
     if cfg.HAVE_VL53L0X:
         from donkeycar.parts.vl53l0x import Vl53l0x
-        V.add(Vl53l0x('/dev/ttyVl53'), outputs=['dist0','dist1','dist2','dist3','dist4','dist5','dist6','dist7'], threaded=True)
+        V.add(Vl53l0x('/dev/ttyVl53'), outputs=['dist0','dist4'], threaded=True)
 
     import cv2
     class ImageDist:
@@ -573,16 +579,22 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     pilot_angle, pilot_throttle,
                     throttle_scale,
                     ai_throttle_mult,
+                    auto_throttle_off,
+                    dist_slow,
+                    dist_stop,
+                    dist_throttle_off,
                     dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
 
             if mode == 'user':
                 if user_throttle > 0:
                     user_throttle = user_throttle * throttle_scale
+
                     if cfg.HAVE_VL53L0X:
-                        if dist4 < cfg.DIST_STOP:
+                        if dist4 < dist_stop:
                             user_throttle = -0.5
-                        elif dist4 < cfg.DIST_SLOW:
-                            user_throttle = user_throttle * 0.3
+                        elif dist4 < dist_slow:
+                            user_throttle = user_throttle * dist_throttle_off
+
                 return user_angle, user_throttle
 
             elif mode == 'local_angle':
@@ -593,13 +605,19 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             else:
                 pilot_angle = pilot_angle if pilot_angle else 0.0
                 pilot_throttle = pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
-                if user_throttle > throttle_scale * 0.9:
+                if user_throttle > throttle_scale * 0.5:
                     return pilot_angle, -0.5
+
                 if cfg.HAVE_VL53L0X:
-                    if dist4 < cfg.DIST_STOP:
+                    if dist4 < dist_stop:
                         pilot_throttle = -0.5
-                    elif dist4 < cfg.DIST_SLOW:
-                        pilot_throttle = user_throttle * 0.3
+                    elif dist4 < dist_slow:
+                        pilot_throttle = pilot_throttle * dist_throttle_off
+                    #else:
+                    #    pilot_throttle = pilot_throttle * (1 - abs(pilot_angle)) * auto_throttle_off
+                #else:
+                #    pilot_throttle = pilot_throttle * (1 - abs(pilot_angle)) * auto_throttle_off
+
                 return pilot_angle, pilot_throttle
 
     V.add(DriveMode(),
@@ -607,6 +625,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                   'pilot/angle', 'pilot/throttle',
                   'throttle_scale',
                   'ai_throttle_mult',
+                  'auto_throttle_off',
+                  'dist_slow',
+                  'dist_stop',
+                  'dist_throttle_off',
                   'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6', 'dist7'],
           outputs=['angle', 'throttle'])
 
@@ -731,11 +753,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(steering, inputs=['angle'])
         V.add(throttle, inputs=['throttle'])
 
-        Pan_controller = PiGPIO_SWPWM(pin=19, freq=50)
-        Pan = PWMSteering(controller=Pan_controller,
-                                        left_pulse=cfg.STEERING_LEFT_PWM, 
-                                        right_pulse=cfg.STEERING_RIGHT_PWM)
-        V.add(Pan, inputs=['angle'])
+        if cfg.HAVE_VL53L0X:
+            Pan_controller = PiGPIO_SWPWM(pin=19, freq=50)
+            Pan = PWMSteering(controller=Pan_controller,
+                                            left_pulse=cfg.LIDAR_RIGHT_PWM, 
+                                            right_pulse=cfg.LIDAR_LEFT_PWM)
+            V.add(Pan, inputs=['angle'])
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:
@@ -807,7 +830,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if cfg.USE_FPVDISP:
         from donkeycar.parts.fpvdisp import FPVDisp
-        V.add(FPVDisp(cfg), 
+        V.add(FPVDisp(cfg, q_button),
             inputs=[
                 'user/mode',
                 'cam/image_array_raw',
@@ -849,6 +872,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'constant_throttle',
                 'throttle_scale',
                 'ai_throttle_mult',
+                'auto_throttle_off',
+                'dist_slow',
+                'dist_stop',
+                'dist_throttle_off',
                 'disp_on',
                 'esc_on',
                 'sw_l3',
@@ -858,6 +885,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'lat1',
                 'lat2',
                 'lat3',
+                'lat4',
                 'period_time'
             ],
             threaded=False #True
@@ -903,13 +931,19 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'volt_a',
                 'volt_b',
                 'dist0',
-                'dist1',
-                'dist2',
-                'dist3',
+                #'dist1',
+                #'dist2',
+                #'dist3',
+                'throttle_scale',
+                'ai_throttle_mult',
+                'auto_throttle_off',
                 'dist4',
-                'dist5',
-                'dist6',
-                'dist7'
+                #'dist5',
+                #'dist6',
+                #'dist7'
+                'dist_slow',
+                'dist_stop',
+                'dist_throttle_off'
             ])
 
     #run the vehicle for 20 seconds

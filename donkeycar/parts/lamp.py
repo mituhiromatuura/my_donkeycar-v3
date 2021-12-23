@@ -34,7 +34,7 @@ class LedCtrl:
 			blue = OFF
 			green = ON
 		elif mode == 'local':
-			tail = OFF
+			tail = ON
 			blue = ON
 			green = OFF
 		if const:

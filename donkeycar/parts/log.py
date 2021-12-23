@@ -158,11 +158,11 @@ class Log:
 				self.dist7.append(dist7)
 
 	def shutdown(self):
-		if self.n > 0:
-			print(self.sum / self.n)
-		else:
+		if self.n < 1:
 			print("no log.csv")
+			return
 
+		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
 		f.write("n,ms,a,t,ua,ut,m,pa,pt,c1,c2,c3,c4,\
 				ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3,\
@@ -247,3 +247,4 @@ class Log:
 			f.write(str(self.dist7[i]))
 			f.write("\n")
 		f.close()
+		print("log.csv save end")
