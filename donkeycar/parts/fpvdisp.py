@@ -110,10 +110,6 @@ class FPVDisp:
         sw_r3,
         stop,
         num_records,
-        lat1,
-        lat2,
-        lat3,
-        lat4,
         period_time):
 
         self.executor_on = True
@@ -168,10 +164,6 @@ class FPVDisp:
         self.sw_r3 = sw_r3
         self.stop = stop
         self.num_records = num_records
-        self.lat1 = lat1
-        self.lat2 = lat2
-        self.lat3 = lat3
-        self.lat4 = lat4
         self.period_time = period_time
     '''
 
@@ -226,10 +218,6 @@ class FPVDisp:
         sw_r3,
         stop,
         num_records,
-        lat1,
-        lat2,
-        lat3,
-        lat4,
         period_time):
 
         if self.on:
@@ -283,10 +271,6 @@ class FPVDisp:
             self.sw_r3 = sw_r3,
             self.stop = stop
             self.num_records = num_records
-            self.lat1 = lat1
-            self.lat2 = lat2
-            self.lat3 = lat3
-            self.lat4 = lat4
             self.period_time = period_time
 
             #self.executor.submit(self.disp_main())
@@ -404,11 +388,6 @@ class FPVDisp:
         cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.dist_stop),(0,59),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.dist_throttle_off),(0,69),textFontFace,textFontScale,textColor,textThickness)
-
-        cv2.putText(img,'o',(60,wheight-1),textFontFace,textFontScale,textColor if self.lat1 else (255,255,0),textThickness)
-        cv2.putText(img,'o',(50,wheight-1),textFontFace,textFontScale,textColor if self.lat2 else (255,255,0),textThickness)
-        cv2.putText(img,'o',(55,wheight-11),textFontFace,textFontScale,textColor if self.lat3 else (255,255,0),textThickness)
-        cv2.putText(img,'o',(40,wheight-1),textFontFace,textFontScale,textColor if self.lat4 else (255,255,0),textThickness)
 
         if self.stop == True:
             cv2.putText(img,'STOP',(65,69),textFontFace,textFontScale,(255,0,0),textThickness)

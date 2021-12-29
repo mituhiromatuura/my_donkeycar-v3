@@ -215,11 +215,6 @@ class JoystickController(object):
         self.ch3 = 0
         self.ch4 = 0
 
-        self.lat1 = False
-        self.lat2 = False
-        self.lat3 = False
-        self.lat4 = False
-
     def init_js(self):
         '''
         Attempt to init joystick. Should be definied by derived class
@@ -550,11 +545,7 @@ class JoystickController(object):
                self.esc_on, \
                self.sw_l3, \
                self.sw_r3, \
-               self.VTXPower_value, \
-               self.lat1, \
-               self.lat2, \
-               self.lat3, \
-               self.lat4
+               self.VTXPower_value
 
 
     def run(self, img_arr=None):
@@ -633,8 +624,8 @@ class TTUJoystickController(JoystickController):
 
         self.ch1, self.ch2, self.ch3, self.ch4 = self.spi.run(self.esc_on)
 
-        pwm_mid = 1530
-        pwm_sub = 430
+        pwm_mid = 1520
+        pwm_sub = 450
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
@@ -642,8 +633,8 @@ class TTUJoystickController(JoystickController):
             self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
         self.set_steering(self.angle)
 
-        pwm_mid = 1530
-        pwm_sub = 430
+        pwm_mid = 1520
+        pwm_sub = 450
         pwm_min = pwm_mid - pwm_sub
         pwm_max = pwm_mid + pwm_sub
 
@@ -772,141 +763,13 @@ class TTUJoystickController(JoystickController):
                     self.q_button.put((name,) + d)
             print(dev_rc, "is missing")
 
-    def lat(self, dev_rc, name):
-        while True:
-            while not os.path.exists(dev_rc):
-                #print(dev_rc, "is missing")
-                time.sleep(2)
-
-            rcdev = open(dev_rc, 'rb')
-            print(dev_rc, "open")
-            self.q_button.put((name,) + (1,0,0,0,0,0,0,0))
-            while True:
-                try:
-                    e = rcdev.read(16)
-                    if e:
-                        d = struct.unpack('hhhhhhhh', e)
-                        if(d[4] == 1):
-                            #print(name, d[4], d[5], d[6], d[7])
-                            self.q_button.put((name,) + d)
-                except:
-                    break
-            print(dev_rc, "is missing")
-            self.q_button.put((name,) + (0,0,0,0,0,0,0,0))
-
     def update(self):
-        threading.Thread(target=self.lat, args=('/dev/LAT-RC01-1',1)).start()
-        threading.Thread(target=self.lat, args=('/dev/LAT-RC01-2',2)).start()
-        threading.Thread(target=self.lat, args=('/dev/LAT-RC01-3',3)).start()
-        threading.Thread(target=self.lat, args=('/dev/LAT-RC01-4',4)).start()
         while True:
             d = self.q_button.get()
             #print(d,type(d))
             bz = True
-            if (d[0] == 1):
-                if(d[1] == 0):
-                    self.lat1 = False
-                elif(d[1] == 1):
-                    self.lat1 = True
-                elif(d[6] == 115 and d[7] == 0): #[+]
-                    self.esc_sw_toggle()
-                    if self.esc_on:
-                        self.q_rfcomm.put('ESC:ESC_ON')
-                    else:
-                        self.q_rfcomm.put('ESC:ESC_OFF')
-                elif(d[6] == 165 and d[7] == 0): #[<]
-                    if self.mode == 'user':
-                        self.mode = 'local'
-                    else:
-                        self.mode = 'user'
-                    self.q_rfcomm.put("MODE:" + self.mode)
-                elif(d[6] == 163 and d[7] == 0): #[>]
-                    self.auto_record_on_throttle = True
-                    #self.recording = False
-                    self.recording = True
-                    print('auto_record_on_throttle:', self.auto_record_on_throttle)
-                    self.q_rfcomm.put('REC:REC_ON')
-                elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.auto_record_on_throttle = False
-                    self.recording = False
-                    print('auto_record_on_throttle:', self.auto_record_on_throttle)
-                    self.q_rfcomm.put('REC:REC_OFF')
-                elif(d[6] == 164 and d[7] == 0): #[||]
-                    self.esc_sw_off()
-                    self.auto_record_on_throttle = False
-                    self.recording = False
-                    self.mode = 'user'
-                    self.constant_throttle = False
-                    self.throttle = 0
-                    self.on_throttle_changes()
 
-                    self.q_rfcomm.put("MODE:" + self.mode)
-                    self.q_rfcomm.put('ESC:ESC_OFF')
-                    self.q_rfcomm.put('REC:REC_OFF')
-                else:
-                    bz = False
-
-            elif (d[0] == 2):
-                if(d[1] == 0):
-                    self.lat2 = False
-                elif(d[1] == 1):
-                    self.lat2 = True
-                elif(d[6] == 115 and d[7] == 0): #[+]
-                    self.increase_auto_throttle_off()
-                    self.q_rfcomm.put("ATOFF:" + str(self.auto_throttle_off))
-                elif(d[6] == 165 and d[7] == 0): #[<]
-                    self.decrease_auto_throttle_off()
-                    self.q_rfcomm.put("ATOFF:" + str(self.auto_throttle_off))
-                elif(d[6] == 163 and d[7] == 0): #[>]
-                    self.increase_dist_throttle_off()
-                    self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
-                elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.decrease_dist_throttle_off()
-                    self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
-                else:
-                    bz = False
-
-            elif (d[0] == 3):
-                if(d[1] == 0):
-                    self.lat3 = False
-                elif(d[1] == 1):
-                    self.lat3 = True
-                elif(d[6] == 115 and d[7] == 0): #[+]
-                    self.increase_max_throttle_10()
-                    self.q_rfcomm.put("MAXTS:" + str(self.throttle_scale))
-                elif(d[6] == 165 and d[7] == 0): #[<]
-                    self.decrease_max_throttle_10()
-                    self.q_rfcomm.put("MAXTS:" + str(self.throttle_scale))
-                elif(d[6] == 163 and d[7] == 0): #[>]
-                    self.increase_ai_throttle_mult()
-                    self.q_rfcomm.put("AITM:" + str(self.ai_throttle_mult))
-                elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.decrease_ai_throttle_mult()
-                    self.q_rfcomm.put("AITM:" + str(self.ai_throttle_mult))
-                else:
-                    bz = False
-
-            elif (d[0] == 4):
-                if(d[1] == 0):
-                    self.lat4 = False
-                elif(d[1] == 1):
-                    self.lat4 = True
-                elif(d[6] == 115 and d[7] == 0): #[+]
-                    self.increase_dist_slow()
-                    self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[6] == 165 and d[7] == 0): #[<]
-                    self.decrease_dist_slow()
-                    self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[6] == 163 and d[7] == 0): #[>]
-                    self.increase_dist_stop()
-                    self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                elif(d[6] == 114 and d[7] == 0): #[-]
-                    self.decrease_dist_stop()
-                    self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                else:
-                    bz = False
-
-            elif (d[0] == 99):
+            if (d[0] == 99):
                 if(d[1] == 'P'):
                     self.esc_sw_off()
                     self.q_rfcomm.put('ESC:ESC_OFF')

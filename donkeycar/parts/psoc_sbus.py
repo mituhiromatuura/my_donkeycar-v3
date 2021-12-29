@@ -4,9 +4,17 @@ import struct
 
 class PsocCounter:
 
-	def __init__(self, dev_rc):
+	def __init__(self, cfg, dev_rc):
 		self.on = True
+		self.cfg = cfg
 		self.dev_rc = dev_rc
+
+		self.ch1center = self.cfg.SBUS_CH1_CENTER
+		self.ch1max = self.cfg.SBUS_CH1_MAX
+		self.ch1min = self.cfg.SBUS_CH1_MIN
+		self.ch2center = self.cfg.SBUS_CH2_CENTER
+		self.ch2max = self.cfg.SBUS_CH2_MAX
+		self.ch2min = self.cfg.SBUS_CH2_MIN
 
 		self.ch0 = 0
 		self.ch1 = 0
@@ -34,8 +42,8 @@ class PsocCounter:
 		if self.ch0 != 0:
 			rpm = 60 * 1000000 // self.ch0
 		return \
-			float((self.ch1 - 1520)/450), \
-			float((self.ch2 - 1520)/450) * -1, \
+			float((self.ch1 - self.ch1center)/((self.ch1max - self.ch1min) / 2)), \
+			float((self.ch2 - self.ch2center)/((self.ch2max - self.ch2min) / 2)), \
 			rpm, \
 			self.ch1, \
 			self.ch2, \
