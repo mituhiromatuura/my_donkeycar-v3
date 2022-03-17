@@ -176,9 +176,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         if cfg.USE_SBUS:
             from donkeycar.parts.psoc_sbus import PsocCounter
+            ctr = PsocCounter(cfg, '/dev/hidPsoc', q_button)
         else:
             from donkeycar.parts.psoc_counter import PsocCounter
-        ctr = PsocCounter(cfg, '/dev/hidPsoc')
+            ctr = PsocCounter('/dev/hidPsoc')
         V.add(ctr, outputs = ['user/angle', 'user/throttle', 'ch4', 'ch1', 'ch2', 'ch3'], threaded=True)
 
     elif use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:

@@ -790,6 +790,9 @@ class TTUJoystickController(JoystickController):
                 elif(d[1] == 'u'):
                     self.mode = 'user'
                     self.q_rfcomm.put("MODE:" + self.mode)
+                elif(d[1] == 'a'):
+                    self.mode = 'local_angle'
+                    self.q_rfcomm.put("MODE:" + self.mode)
                 elif(d[1] == 'l'):
                     self.mode = 'local'
                     self.q_rfcomm.put("MODE:" + self.mode)
