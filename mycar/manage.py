@@ -634,6 +634,20 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
           outputs=['angle', 'throttle'])
 
 
+    class V2Esp32():
+
+        def __init__(self, q_rfcomm):
+            self.q_rfcomm = q_rfcomm
+            self.sec = time.time()
+
+        def run(self, ina226):
+            if time.time() - self.sec > 1:
+                self.sec = time.time()
+                self.q_rfcomm.put("VOLT:" + str(ina226))
+
+    V.add(V2Esp32(q_rfcomm), inputs=['volt_a'])
+
+
     '''
     #to give the car a boost when starting ai mode in a race.
     aiLauncher = AiLaunch(cfg.AI_LAUNCH_DURATION, cfg.AI_LAUNCH_THROTTLE, cfg.AI_LAUNCH_KEEP_ENABLED)

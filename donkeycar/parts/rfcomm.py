@@ -12,6 +12,9 @@ class RfComm:
 		self.q_button = q_button
 		self.on = True
 
+		subprocess.call("sudo rfcomm --raw connect 0 34:AB:95:5C:82:0A 1 &", shell=True)
+		time.sleep(1)
+
 		try:
 			self.dev_rc = '/dev/rfcomm0'
 			self.bt = open(self.dev_rc, 'w')

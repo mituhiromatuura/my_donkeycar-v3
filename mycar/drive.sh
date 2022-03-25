@@ -47,15 +47,6 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   mkdir $MYCAR/data
 
   sudo pigpiod
-  #sudo rfcomm --raw connect 0 24:0A:C4:0F:EC:22 1 &
-  #sudo rfcomm --raw connect 0 40:F5:20:53:5C:7E 1 &
-  #sudo rfcomm --raw connect 0 24:0A:C4:F6:68:22 1 &
-  #NodeMCU
-  #sudo rfcomm --raw connect 0 7C:9E:BD:65:B7:BA 1 &
-  #AE-ESP32-WROOM-32E-MINI
-  sudo rfcomm --raw connect 0 34:AB:95:5C:82:0A 1 &
-  #ESP32test
-  #sudo rfcomm --raw connect 0 24:0A:C4:F5:2D:6A 1 &
 
   vcgencmd measure_clock arm
   vcgencmd measure_temp
