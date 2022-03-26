@@ -44,6 +44,9 @@ HAVE_REVCOUNT = True
 HAVE_BUZZER = True
 #HAVE_BUZZER = False
 
+USE_RFCOMM = True
+#USE_RFCOMM = False
+
 USE_FPVDISP = True
 #USE_FPVDISP = False
 

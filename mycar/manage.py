@@ -65,8 +65,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #Initialize car
     V = dk.vehicle.Vehicle()
 
-    from donkeycar.parts.rfcomm import RfComm
-    V.add(RfComm(cfg, q_rfcomm, q_button), threaded=True)
+    if cfg.USE_RFCOMM:
+        from donkeycar.parts.rfcomm import RfComm
+        V.add(RfComm(cfg, q_rfcomm, q_button), threaded=True)
 
     from donkeycar.parts.period_time import PeriodTime
     V.add(PeriodTime(cfg), inputs=['user/mode'], outputs=['period_time'])
