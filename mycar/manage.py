@@ -576,6 +576,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     #Choose what inputs should change the car.
     class DriveMode:
+
+        def __init__(self):
+            self.angle = 0.0
+
         def run(self, mode,
                     user_angle, user_throttle,
                     pilot_angle, pilot_throttle,
@@ -605,7 +609,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 return pilot_angle, user_throttle
 
             else:
-                pilot_angle = pilot_angle if pilot_angle else 0.0
+                if abs(self.angle - pilot_angle) < 0.3:
+                    pilot_angle = pilot_angle if pilot_angle else 0.0
+                    self.angle = pilot_angle
+
                 pilot_throttle = pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
                 if user_throttle > throttle_scale * 0.5:
                     return pilot_angle, -0.5
@@ -768,13 +775,18 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
         V.add(steering, inputs=['angle'])
         V.add(throttle, inputs=['throttle'])
-
+    
         if cfg.HAVE_VL53L0X:
             Pan_controller = PiGPIO_SWPWM(pin=19, freq=50)
             Pan = PWMSteering(controller=Pan_controller,
                                             left_pulse=cfg.LIDAR_RIGHT_PWM, 
                                             right_pulse=cfg.LIDAR_LEFT_PWM)
             V.add(Pan, inputs=['angle'])
+
+    elif cfg.DRIVE_TRAIN_TYPE == "PSOC_I2C_PWM":
+        from donkeycar.parts.actuator_psoc import PsocI2cPwm
+        psoc_i2c_pwm = PsocI2cPwm()
+        V.add(psoc_i2c_pwm, inputs=['ch1', 'ch2'])
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:
