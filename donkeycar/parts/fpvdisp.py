@@ -385,9 +385,11 @@ class FPVDisp:
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.auto_throttle_off),(0,39),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.dist_stop),(0,59),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.dist_throttle_off),(0,69),textFontFace,textFontScale,textColor,textThickness)
+
+        if self.cfg.HAVE_VL53L0X:
+            cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,str(self.dist_stop),(0,59),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,str(self.dist_throttle_off),(0,69),textFontFace,textFontScale,textColor,textThickness)
 
         if self.stop == True:
             cv2.putText(img,'STOP',(65,69),textFontFace,textFontScale,(255,0,0),textThickness)

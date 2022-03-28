@@ -55,7 +55,7 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
     python manage.py drive --js
   fi
   if [ $1 = "a" ]; then
-    #python manage.py drive --model=./models/mypilot.h5 --js
+    #python manage.py drive --model=./models/mypilot-aug.h5 --js
     if [ $2 == ""]; then
       MODEL=./models/mypilot-aug.tflite
     else
