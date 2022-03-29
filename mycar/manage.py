@@ -457,12 +457,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inf_input = 'cam/image_array'
     else:
         inf_input = 'cam/normalized/cropped'
-        '''
         V.add(ImgPreProcess(cfg),
             inputs=['cam/image_array'],
             outputs=[inf_input],
             run_condition='run_pilot')
-        '''
 
     # Use the FPV preview, which will show the cropped image output, or the full frame.
     if cfg.USE_FPV:
