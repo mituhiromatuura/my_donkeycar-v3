@@ -786,7 +786,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     elif cfg.DRIVE_TRAIN_TYPE == "PSOC_I2C_PWM":
         from donkeycar.parts.actuator_psoc import PsocI2cPwm
         psoc_i2c_pwm = PsocI2cPwm(cfg)
-        V.add(psoc_i2c_pwm, inputs=['user/angle', 'user/throttle'])
+        V.add(psoc_i2c_pwm, inputs=['angle', 'throttle'])
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:
