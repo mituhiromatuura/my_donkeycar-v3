@@ -81,9 +81,17 @@ class MakeMovie(object):
         except:
             self.csv_file = False
 
+        '''
         clip = mpy.VideoClip(self.make_frame,
                              duration=((num_frames - 1) / self.cfg.DRIVE_LOOP_HZ))
         clip.write_videofile(args.out, fps=self.cfg.DRIVE_LOOP_HZ)
+        '''
+        record_start = self.tub.get_record(self.index[start])
+        record_last = self.tub.get_record(self.index[self.end])
+        duration = (int(record_last["milliseconds"]) - int(record_start["milliseconds"])) / 1000
+        clip = mpy.VideoClip(self.make_frame,
+                             duration=duration)
+        clip.write_videofile(args.out, fps=(num_frames - 1) / duration)
 
     def draw_user_input(self, record, img):
         '''
@@ -130,51 +138,54 @@ class MakeMovie(object):
         cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
 
         if self.csv_file == True:
-            row = self.csv[self.iRec + 1]
+            try:
+                row = self.csv[self.iRec + 1]
 
-            #try:
-            #    i = 2+2+3+2+4+9
-            #    x = math.cos(math.radians(float(row[i+2]))) * height/2
-            #    y = math.sin(math.radians(float(row[i+2]))) * height/2
-            #    cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
-            #except:
-            #    pass
+                #try:
+                #    i = 2+2+3+2+4+9
+                #    x = math.cos(math.radians(float(row[i+2]))) * height/2
+                #    y = math.sin(math.radians(float(row[i+2]))) * height/2
+                #    cv2.line(img,(width//2,height//2),(int(x+width/2),int(y+height/2)),(0,255,255))
+                #except:
+                #    pass
 
-            if self.cfg.HAVE_VL53L0X:
+                if self.cfg.HAVE_VL53L0X:
 
-                i = 2+2+3+2+4+9+3+4+2
-                dist0 = float(row[i+0])
-                dist4 = int(row[i+4])
-                self.dist5 = int(row[i+5])
-                self.dist6 = int(row[i+6])
+                    i = 2+2+3+2+4+9+3+4+2
+                    dist0 = float(row[i+0])
+                    dist4 = int(row[i+4])
+                    self.dist5 = int(row[i+5])
+                    self.dist6 = int(row[i+6])
 
-                def distColor(dist):
-                    if dist > self.dist5:
-                        return (0,255,0)
-                    elif dist > self.dist6:
-                        return (255,255,0)
-                    else:
-                        return (255,0,0)
+                    def distColor(dist):
+                        if dist > self.dist5:
+                            return (0,255,0)
+                        elif dist > self.dist6:
+                            return (255,255,0)
+                        else:
+                            return (255,0,0)
 
-                #cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
-                x = int(width/2 * (1 + user_angle * 0.75))
-                cv2.circle(img,(x,height//2),int(dist0*40),distColor(dist4),1)
-                if dist4 < 8190:
-                    cv2.putText(img,str(dist4),(x,height//2),textFontFace,textFontScale,distColor(dist4),textThickness)
+                    #cv2.circle(img,(width//4*2,height//4*2),int(dist0*40),circleColor(dist0),1)
+                    x = int(width/2 * (1 + user_angle * 0.75))
+                    cv2.circle(img,(x,height//2),int(dist0*40),distColor(dist4),1)
+                    if dist4 < 8190:
+                        cv2.putText(img,str(dist4),(x,height//2),textFontFace,textFontScale,distColor(dist4),textThickness)
 
-                '''
-                dist1 = float(row[i+1])
-                dist5 = int(row[i+5])
-                cv2.circle(img,(width//6*1,height//5*3),int(dist1*40),circleColor(dist5),1)
-                if dist5 < 8000:
-                    cv2.putText(img,str(dist5),(width//6*1,height//5*3),textFontFace,textFontScale,circleColor(dist5),textThickness)
+                    '''
+                    dist1 = float(row[i+1])
+                    dist5 = int(row[i+5])
+                    cv2.circle(img,(width//6*1,height//5*3),int(dist1*40),circleColor(dist5),1)
+                    if dist5 < 8000:
+                        cv2.putText(img,str(dist5),(width//6*1,height//5*3),textFontFace,textFontScale,circleColor(dist5),textThickness)
 
-                dist2 = float(row[i+2])
-                dist6 = int(row[i+6])
-                cv2.circle(img,(width//6*5,height//5*3),int(dist2*40),circleColor(dist6),1)
-                if dist6 < 8000:
-                    cv2.putText(img,str(dist6),(width//6*5,height//5*3),textFontFace,textFontScale,circleColor(dist6),textThickness)
-                '''
+                    dist2 = float(row[i+2])
+                    dist6 = int(row[i+6])
+                    cv2.circle(img,(width//6*5,height//5*3),int(dist2*40),circleColor(dist6),1)
+                    if dist6 < 8000:
+                        cv2.putText(img,str(dist6),(width//6*5,height//5*3),textFontFace,textFontScale,circleColor(dist6),textThickness)
+                    '''
+            except:
+                pass
         
     def draw_model_prediction(self, record, img):
         '''

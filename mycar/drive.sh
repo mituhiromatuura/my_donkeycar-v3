@@ -38,7 +38,7 @@ ymdhm=`date "+%Y%m%d%H%M"`
 
 LOGS="/media/pi/MYCAR_LOGS"
 if [ ! -e $LOGS ]; then
-    LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
+  LOGS="/home/pi/projects/my_donkeycar-v3/mycar/logs"
 fi
 
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
@@ -52,16 +52,10 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   vcgencmd measure_temp
 
   if [ $1 = "0" ] || [ $1 = "d" ]; then
-    python manage.py drive --js
+    python manage.py drive --myconfig $MYCONFIG --js
   fi
   if [ $1 = "a" ]; then
-    if [ $2 == ""]; then
-      MODEL=./models/mypilot-aug.tflite
-    else
-      MODEL=$2
-    fi
-    python manage.py drive --model=$MODEL --type coral_tflite_linear --js
-    #python manage.py drive --model=./models/mypilot-aug.h5 --js
+    python manage.py drive --myconfig $MYCONFIG --model $MODEL_FILE --type $MODEL_TYPE --js
   fi
   sudo killall -9 pigpiod
   sudo rm -rf /var/run/pigpio.pid
