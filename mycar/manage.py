@@ -415,7 +415,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     V.add(ImageDist(), inputs=['cam/image_array_raw', 'dist5', 'dist6'], outputs=['cam/image_array'])
 
     #LAMP
-    if cfg.DRIVE_TRAIN_TYPE != "SERVO_ESC":
+    if cfg.HAVE_LEDLAMP:
         from donkeycar.parts.lamp import LedCtrl
         V.add(LedCtrl(cfg), inputs = ['user/mode', 'user/throttle', 'auto_record_on_throttle', 'constant_throttle', 'esc_on'],
             outputs = ['led/head', 'led/tail', 'led/left', 'led/right', 'led/blue', 'led/green'])

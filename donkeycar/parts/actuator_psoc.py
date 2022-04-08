@@ -23,11 +23,19 @@ class PsocI2cPwm:
 
 	def run(self, angle, throttle):
 		p = struct.pack('H', int(angle * ((self.ch1max - self.ch1min) / 2) + self.ch1center))
+
 		#print(angle, (angle * ((self.ch1max - self.ch1min) / 2) + self.ch1center), p)
-		self.i2c.write_i2c_block_data(self.addr, 1, p)
+		try:
+			self.i2c.write_i2c_block_data(self.addr, 1, p)
+		except:
+			print("PSoc i2c error")
+
 		p = struct.pack('H', int(throttle * ((self.ch2max - self.ch2min) / 2) + self.ch2center))
 		#print(throttle, (throttle * ((self.ch2max - self.ch2min) / 2) + self.ch2center), p)
-		self.i2c.write_i2c_block_data(self.addr, 2, p)
+		try:
+			self.i2c.write_i2c_block_data(self.addr, 2, p)
+		except:
+			print("PSoc i2c error")
 
 	def shutdown(self):
 		pass

@@ -5,6 +5,9 @@ DRIVE_LOOP_HZ = 50
 #IMAGE_H = 80
 #IMAGE_H = 64
 
+HAVE_LEDLAMP = False
+#HAVE_LEDLAMP = True
+
 HAVE_AHRS = False
 #HAVE_AHRS = True
 
