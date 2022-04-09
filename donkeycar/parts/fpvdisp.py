@@ -407,7 +407,8 @@ class FPVDisp:
 
         cv2.putText(img,str(self.spi_angle),(90,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.spi_throttle),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.spi_revcount),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+        if self.cfg.HAVE_REVCOUNT:
+            cv2.putText(img,str(self.spi_revcount),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:

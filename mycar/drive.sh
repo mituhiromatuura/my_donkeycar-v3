@@ -14,7 +14,7 @@ if [ $1 = "0" ]; then
     exit
   fi
 else
-  if [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ] || [ $1 = "s" ]; then
+  if [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "up" ] || [ $1 = "down" ] || [ $1 = "s" ]; then
     rm $DOUBLE
   fi
 fi
@@ -51,11 +51,22 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
   vcgencmd measure_clock arm
   vcgencmd measure_temp
 
-  if [ $1 = "0" ] || [ $1 = "d" ]; then
-    python manage.py drive --myconfig $MYCONFIG --js
+  if [[ $MYCONFIG != "" ]]; then
+    MYCONFIG="--myconfig "$MYCONFIG
   fi
-  if [ $1 = "a" ]; then
-    python manage.py drive --myconfig $MYCONFIG --model $MODEL_FILE --type $MODEL_TYPE --js
+
+  if [ $1 = "0" ] || [ $1 = "d" ]; then
+    python manage.py drive $MYCONFIG --js
+  else
+    if [[ $MODEL_FILE != "" ]]; then
+      MODEL_FILE="--model "$MODEL_FILE
+    else
+      MODEL_FILE="--model ./models/mypilot-aug.h5"
+    fi
+    if [[ $MODEL_TYPE != "" ]]; then
+      MODEL_TYPE="--type "$MODEL_TYPE
+    fi
+    python manage.py drive $MYCONFIG $MODEL_FILE $MODEL_TYPE --js
   fi
   sudo killall -9 pigpiod
   sudo rm -rf /var/run/pigpio.pid
@@ -74,7 +85,7 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ]; then
   fi
 
   pushd /run/shm
-  if [ $1 != "a" ]; then
+  if [[ $1 != "a" ]]; then
     sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
     sudo chown pi:pi $LOGS/log_${ymdhm}_drive.zip
     cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_drive.csv
@@ -91,7 +102,7 @@ fi
 
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ]; then
   read -p "Hit enter: makemovie"
-  if [ $1 != "a" ]; then
+  if [[ $1 != "a" ]]; then
     donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_drive.mp4 --scale 1
     read -p "Hit enter: rsync movie"
     rsync -rtv $LOGS/log_${ymdhm}_drive.mp4 work@$hostname.local:/Volumes/$ramdisk/
@@ -102,14 +113,14 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ];
   fi
 fi
 
-if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ]; then
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "up" ]; then
   read -p "Hit enter: updown"
   echo -n "input path: "
   read str
   time rsync -rtz --compress-level=9 $MYCAR $DDPROG:/run/shm/$str/
 fi
 
-if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "u" ] || [ $1 = "d" ]; then
+if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ] || [ $1 = "m" ] || [ $1 = "up" ] || [ $1 = "down" ]; then
   echo $str
   read -p "Hit enter: get model file"
   time rsync -rtz --compress-level=9 $DDPROG:/run/shm/$str/mycar/models ./

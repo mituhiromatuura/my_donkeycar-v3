@@ -651,7 +651,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 self.sec = time.time()
                 self.q_rfcomm.put("VOLT:" + str(ina226))
 
-    V.add(V2Esp32(q_rfcomm), inputs=['volt_a'])
+    if cfg.USE_RFCOMM:
+        V.add(V2Esp32(q_rfcomm), inputs=['volt_a'])
 
 
     '''
