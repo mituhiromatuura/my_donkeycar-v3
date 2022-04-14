@@ -441,7 +441,6 @@ class JoystickController(object):
             self.fram.write_f(0, self.throttle_scale)
 
 
-    '''
     def disp_sw_on(self):
         self.disp_on = True
         print('disp_on:', self.disp_on)
@@ -450,15 +449,16 @@ class JoystickController(object):
     def disp_sw_off(self):
         self.disp_on = False
         print('disp_on:', self.disp_on)
+
+
     '''
-
-
     def disp_sw_toggle(self):
         if self.disp_on:
             self.disp_on = False
         else:
             self.disp_on = True
         print('disp_sw_toggle:', self.disp_on)
+    '''
 
 
     def esc_sw_on(self):
@@ -832,6 +832,10 @@ class TTUJoystickController(JoystickController):
                 elif(d[1] == '-'):
                     self.decrease_dist_throttle_off()
                     self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
+                elif(d[1] == 'D'):
+                    self.disp_sw_off()
+                elif(d[1] == 'd'):
+                    self.disp_sw_on()
                 else:
                     bz = False
 

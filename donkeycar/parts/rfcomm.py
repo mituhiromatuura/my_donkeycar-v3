@@ -12,7 +12,8 @@ class RfComm:
 		self.q_button = q_button
 		self.on = True
 
-		subprocess.call("sudo rfcomm --raw connect 0 " + cfg.RFCOMM_MAC + " 1 &", shell=True)
+		tmp = subprocess.check_output("printenv RFCOMM_MAC", shell=True).decode('ascii')
+		subprocess.call("sudo rfcomm --raw connect 0 " + tmp.strip() + " 1 &", shell=True)
 		time.sleep(1)
 
 		try:

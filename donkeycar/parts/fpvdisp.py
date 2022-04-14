@@ -285,8 +285,11 @@ class FPVDisp:
     '''
 
     def disp_main(self):
-        #if self.mode == 'local':
-        #    return
+        try:
+            if self.num_records % 1000 == 0:
+                print(self.num_records)
+        except:
+            pass
 
         if self.constant_throttle:
             GPIO.output(self.gpio_pin_const, self.led_on)
@@ -309,11 +312,8 @@ class FPVDisp:
                 GPIO.output(self.gpio_pin_local_angle, self.led_on)
                 GPIO.output(self.gpio_pin_local, self.led_on)
 
-        try:
-            if self.num_records % 1000 == 0:
-                print(self.num_records)
-        except:
-            pass
+                if not self.disp_on:
+                    return
 
         cv2.namedWindow('DonkeyCamera', cv2.WINDOW_NORMAL)
         #cv2.namedWindow('DonkeyCamera', cv2.WINDOW_AUTOSIZE)
