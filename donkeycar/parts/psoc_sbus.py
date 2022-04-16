@@ -43,6 +43,7 @@ class PsocCounter:
 				d = self.uart.read(16)
 				self.ch0, self.ch1, self.ch2, self.ch3, self.ch4, self.ch5, self.ch6, self.ch7 = struct.unpack('HHHHHHHH', d)
 
+				'''
 				if ch3 == 0:
 					if self.ch3 == 0x400:
 						ch3 = self.ch3
@@ -52,12 +53,15 @@ class PsocCounter:
 					else:
 						self.q_button.put([99,'D'])
 					ch3 = self.ch3
+				'''
 
 				if ch4 == 0:
 					if self.ch4 == 0x3ff:
 						ch4 = self.ch4
 				elif ch4 < self.ch4 and st4 <= 1: # up
-					if st4 == -3:
+					if st4 == -4:
+						self.q_button.put([99,'D'])
+					elif st4 == -3:
 						self.q_button.put([99,'a'])
 					elif st4 == -2:
 						self.q_button.put([99,'u'])
@@ -69,7 +73,7 @@ class PsocCounter:
 						self.q_button.put([99,'r'])
 					ch4 = self.ch4
 					st4 = st4 + 1
-				elif ch4 > self.ch4 and st4 >= -2: # down
+				elif ch4 > self.ch4 and st4 >= -3: # down
 					if st4 == 2:
 						self.q_button.put([99,'R'])
 					elif st4 == 1:
@@ -80,6 +84,8 @@ class PsocCounter:
 						self.q_button.put([99,'a'])
 					elif st4 == -2:
 						self.q_button.put([99,'l'])
+					elif st4 == -3:
+						self.q_button.put([99,'d'])
 					ch4 = self.ch4
 					st4 = st4 - 1
 

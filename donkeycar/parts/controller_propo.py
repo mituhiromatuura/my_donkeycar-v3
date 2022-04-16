@@ -9,7 +9,6 @@ import logging
 import threading, queue
 import RPi.GPIO as GPIO
 from donkeycar.parts.fram2 import Fram
-from donkeycar.parts.spi import Spi
 
 class Joystick(object):
     '''
@@ -566,8 +565,6 @@ class TTUJoystickController(JoystickController):
     def __init__(self, q_button, q_rfcomm, *args, **kwargs):
         super(TTUJoystickController, self).__init__(*args, **kwargs)
 
-        self.spi = Spi()
-
         self.q_button = q_button
         self.q_rfcomm = q_rfcomm
 
@@ -621,31 +618,6 @@ class TTUJoystickController(JoystickController):
         else:
             GPIO.output(self.gpio_pin_esc_on, GPIO.LOW)
             self.becst = 0
-
-        self.ch1, self.ch2, self.ch3, self.ch4 = self.spi.run(self.esc_on)
-
-        pwm_mid = 1520
-        pwm_sub = 450
-        pwm_min = pwm_mid - pwm_sub
-        pwm_max = pwm_mid + pwm_sub
-
-        if (self.ch1 >= pwm_min) and (self.ch1 <= pwm_max):
-            self.angle = (self.ch1 - pwm_mid)/pwm_sub # Left -1 0 +1 Right
-        self.set_steering(self.angle)
-
-        pwm_mid = 1520
-        pwm_sub = 450
-        pwm_min = pwm_mid - pwm_sub
-        pwm_max = pwm_mid + pwm_sub
-
-        if (self.ch2 >= pwm_min) and (self.ch2 <= pwm_max):
-            self.throttle = (pwm_mid - self.ch2)/pwm_sub # Forward 1 0 -1 Reverse
-        self.set_throttle(self.throttle)
-
-        self.ch3 = 0
-
-        if self.ch4 != 0:
-            self.ch4 = 60 * 1000000 // self.ch4
 
 
     def init_js(self):
@@ -726,43 +698,6 @@ class TTUJoystickController(JoystickController):
         if self.have_fram:
             self.fram.write_f(5, self.dist_throttle_off)
 
-    def ft230x(self, dev_rc, name):
-        import pigpio
-        pi = pigpio.pi()
-        while True:
-            while not os.path.exists(dev_rc):
-                #print(dev_rc, "is missing")
-                time.sleep(2)
-
-            uart = pi.serial_open(dev_rc, 115200, 0)
-            print(dev_rc, "open")
-            while True:
-                try:
-                    (n,e) = pi.serial_read(uart)
-                except:
-                    break
-                if n > 0:
-                    self.q_button.put((name,n,e))
-            print(dev_rc, "is missing")
-
-    def jsx(self, dev_rc, name):
-        while True:
-            while not os.path.exists(dev_rc):
-                #print(dev_rc, "is missing")
-                time.sleep(2)
-
-            rcdev = open(dev_rc, 'rb')
-            print(dev_rc, "open")
-            while True:
-                try:
-                    e = rcdev.read(8)
-                except:
-                    break
-                if e:
-                    d = struct.unpack('hhhh', e)
-                    self.q_button.put((name,) + d)
-            print(dev_rc, "is missing")
-
     def update(self):
         while True:
             d = self.q_button.get()
@@ -832,9 +767,9 @@ class TTUJoystickController(JoystickController):
                 elif(d[1] == '-'):
                     self.decrease_dist_throttle_off()
                     self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
-                elif(d[1] == 'D'):
-                    self.disp_sw_off()
                 elif(d[1] == 'd'):
+                    self.disp_sw_off()
+                elif(d[1] == 'D'):
                     self.disp_sw_on()
                 else:
                     bz = False
