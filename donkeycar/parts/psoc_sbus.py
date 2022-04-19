@@ -26,6 +26,11 @@ class PsocCounter:
 		self.ch5 = 0
 		self.ch6 = 0
 		self.ch7 = 0
+		self.ch8 = 0
+		self.ch9 = 0
+		self.ch10 = 0
+		self.ch11 = 0
+		self.ch12 = 0
 
 	def update(self):
 		while self.on:
@@ -36,16 +41,18 @@ class PsocCounter:
 			self.uart = open(self.dev_rc,'rb')
 			print(self.dev_rc, "open")
 
-			ch3 = 0
-			ch4 = 0
-			st4 = 0
+			ch6 = 0
+			st6 = 0
 			while self.on:
 				d = self.uart.read(16)
-				self.ch0, self.ch1, self.ch2, self.ch3, self.ch4, self.ch5, self.ch6, self.ch7 = struct.unpack('HHHHHHHH', d)
+				self.ch0, self.ch1, self.ch2, \
+				self.ch4, self.ch3, self.ch6, self.ch5, self.ch8, self.ch7, \
+				self.ch10, self.ch9, self.ch12, self.ch11 \
+				= struct.unpack('HHHBBBBBBBBBB', d)
 
 				'''
 				if ch3 == 0:
-					if self.ch3 == 0x400:
+					if self.ch3 == self.cfg.SBUS_CH3_CENTER:
 						ch3 = self.ch3
 				elif ch3 != self.ch3:
 					if self.ch3 == 0x400:
@@ -55,39 +62,42 @@ class PsocCounter:
 					ch3 = self.ch3
 				'''
 
-				if ch4 == 0:
-					if self.ch4 == 0x3ff:
-						ch4 = self.ch4
-				elif ch4 < self.ch4 and st4 <= 1: # up
-					if st4 == -4:
+				if ch6 == 0:
+					if self.ch6 == self.cfg.SBUS_CH6_CENTER:
+						ch6 = self.ch6
+				elif ch6 < self.ch6 and st6 <= 1: # up
+					if st6 == -4:
 						self.q_button.put([99,'D'])
-					elif st4 == -3:
+					elif st6 == -3:
 						self.q_button.put([99,'a'])
-					elif st4 == -2:
+					elif st6 == -2:
 						self.q_button.put([99,'u'])
-					elif st4 == -1:
+					elif st6 == -1:
 						self.q_button.put([99,'P'])
-					elif st4 == 0:
+					elif st6 == 0:
 						self.q_button.put([99,'p'])
-					elif st4 == 1:
+					elif st6 == 1:
 						self.q_button.put([99,'r'])
-					ch4 = self.ch4
-					st4 = st4 + 1
-				elif ch4 > self.ch4 and st4 >= -3: # down
-					if st4 == 2:
+					ch6 = self.ch6
+					st6 = st6 + 1
+				elif ch6 > self.ch6 and st6 >= -4: # down
+					if st6 == 2:
 						self.q_button.put([99,'R'])
-					elif st4 == 1:
+					elif st6 == 1:
 						self.q_button.put([99,'P'])
-					elif st4 == 0:
+					elif st6 == 0:
 						self.q_button.put([99,'p'])
-					elif st4 == -1:
+					elif st6 == -1:
 						self.q_button.put([99,'a'])
-					elif st4 == -2:
+					elif st6 == -2:
 						self.q_button.put([99,'l'])
-					elif st4 == -3:
+					elif st6 == -3:
 						self.q_button.put([99,'d'])
-					ch4 = self.ch4
-					st4 = st4 - 1
+					elif st6 == -4:
+						self.q_button.put([99,'P'])
+						self.q_button.put([99,'D'])
+					ch6 = self.ch6
+					st6 = st6 - 1
 
 	def run_threaded(self):
 		rpm = 0
