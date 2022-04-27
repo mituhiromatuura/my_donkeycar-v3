@@ -22,10 +22,16 @@ class Log:
 		self.pilot_angle = list()
 		self.pilot_throttle = list()
 
+		self.rpm = list()
+		self.ch0 = list()
 		self.ch1 = list()
 		self.ch2 = list()
 		self.ch3 = list()
 		self.ch4 = list()
+		self.ch5 = list()
+		self.ch6 = list()
+		self.ch7 = list()
+		self.ch8 = list()
 
 		self.acl_x = list()
 		self.acl_y = list()
@@ -70,10 +76,16 @@ class Log:
 			pilot_angle,
 			pilot_throttle,
 
+			rpm,
+			ch0,
 			ch1,
 			ch2,
 			ch3,
 			ch4,
+			ch5,
+			ch6,
+			ch7,
+			ch8,
 
 			acl_x,
 			acl_y,
@@ -123,10 +135,16 @@ class Log:
 				self.pilot_angle.append(pilot_angle)
 				self.pilot_throttle.append(pilot_throttle)
 
+				self.rpm.append(rpm)
+				self.ch0.append(ch0)
 				self.ch1.append(ch1)
 				self.ch2.append(ch2)
 				self.ch3.append(ch3)
 				self.ch4.append(ch4)
+				self.ch5.append(ch5)
+				self.ch6.append(ch6)
+				self.ch7.append(ch7)
+				self.ch8.append(ch8)
 
 				self.acl_x.append(acl_x)
 				self.acl_y.append(acl_y)
@@ -164,7 +182,7 @@ class Log:
 
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
-		f.write("n,ms,a,t,ua,ut,m,pa,pt,c1,c2,c3,c4,\
+		f.write("n,ms,a,t,ua,ut,m,pa,pt,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,\
 				ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3,\
 				va,vb,d0,d1,d2,d3,d4,d5,d6,d7\n")
 		for i in range(self.n):
@@ -186,6 +204,10 @@ class Log:
 			f.write(",")
 			f.write(str(self.pilot_throttle[i]))
 			f.write(",")
+			f.write(str(self.rpm[i]))
+			f.write(",")
+			f.write(str(self.ch0[i]))
+			f.write(",")
 			f.write(str(self.ch1[i]))
 			f.write(",")
 			f.write(str(self.ch2[i]))
@@ -193,6 +215,14 @@ class Log:
 			f.write(str(self.ch3[i]))
 			f.write(",")
 			f.write(str(self.ch4[i]))
+			f.write(",")
+			f.write(str(self.ch5[i]))
+			f.write(",")
+			f.write(str(self.ch6[i]))
+			f.write(",")
+			f.write(str(self.ch7[i]))
+			f.write(",")
+			f.write(str(self.ch8[i]))
 			f.write(",")
 			f.write(str(self.acl_x[i]))
 			f.write(",")

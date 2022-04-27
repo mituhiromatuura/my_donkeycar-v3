@@ -64,10 +64,16 @@ class FPVDisp:
         image,
         angle,
         throttle,
-        spi_angle,
-        spi_throttle,
-        spi_ch3,
-        spi_revcount,
+        rpm,
+        ch0,
+        ch1,
+        ch2,
+        ch3,
+        ch4,
+        ch5,
+        ch6,
+        ch7,
+        ch8,
         imu_acl_x,
         imu_acl_y,
         imu_acl_z,
@@ -118,10 +124,16 @@ class FPVDisp:
         self.image = image
         self.angle = angle
         self.throttle = throttle
-        self.spi_angle = spi_angle
-        self.spi_throttle = spi_throttle
-        self.spi_ch3 = spi_ch3,
-        self.spi_revcount = spi_revcount
+        self.rpm = rpm,
+        self.ch0 = ch0,
+        self.ch1 = ch1,
+        self.ch2 = ch2,
+        self.ch3 = ch3,
+        self.ch4 = ch4,
+        self.ch5 = ch5,
+        self.ch6 = ch6,
+        self.ch7 = ch7,
+        self.ch8 = ch8,
         self.imu_acl_x = imu_acl_x
         self.imu_acl_y = imu_acl_y
         self.imu_acl_z = imu_acl_z
@@ -172,10 +184,16 @@ class FPVDisp:
         image,
         angle,
         throttle,
-        spi_angle,
-        spi_throttle,
-        spi_ch3,
-        spi_revcount,
+        rpm,
+        ch0,
+        ch1,
+        ch2,
+        ch3,
+        ch4,
+        ch5,
+        ch6,
+        ch7,
+        ch8,
         imu_acl_x,
         imu_acl_y,
         imu_acl_z,
@@ -225,10 +243,16 @@ class FPVDisp:
             self.image = image
             self.angle = angle
             self.throttle = throttle
-            self.spi_angle = spi_angle
-            self.spi_throttle = spi_throttle
-            self.spi_ch3 = spi_ch3
-            self.spi_revcount = spi_revcount
+            self.rpm = rpm
+            self.ch0 = ch0
+            self.ch1 = ch1
+            self.ch2 = ch2
+            self.ch3 = ch3
+            self.ch4 = ch4
+            self.ch5 = ch5
+            self.ch6 = ch6
+            self.ch7 = ch7
+            self.ch8 = ch8
             self.imu_acl_x = imu_acl_x
             self.imu_acl_y = imu_acl_y
             self.imu_acl_z = imu_acl_z
@@ -353,8 +377,8 @@ class FPVDisp:
 
         x0=int(round(wwidth/2))
         y0=int(round(wheight))
-        x1=int(round(wwidth/2 + wwidth/2*self.angle))
-        y1=int(round(wheight - wheight*self.throttle))
+        x1=int(round(wwidth/2 + wwidth/2*self.angle * (1 if self.cfg.SBUS_CH1_MIN < self.cfg.SBUS_CH1_MAX else -1)))
+        y1=int(round(wheight + wheight*self.throttle * (1 if self.cfg.SBUS_CH2_MIN < self.cfg.SBUS_CH2_MAX else -1)))
 
         cv2.line(img,(x0 ,y0),(x1,y1),color,2)
 
@@ -384,7 +408,7 @@ class FPVDisp:
 
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.auto_throttle_off),(0,39),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(int(self.auto_throttle_off*100)),(0,39),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_VL53L0X:
             cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
@@ -405,11 +429,11 @@ class FPVDisp:
         cv2.putText(img,str(sec//60)+':'+str(sec%60),(0,wheight-21),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.num_records),(90,wheight-21),textFontFace,textFontScale,textColor,textThickness)
 
-        cv2.putText(img,str(self.spi_angle),(90,wheight-11),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.spi_throttle),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.ch1),(90,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.ch2),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         if self.cfg.HAVE_REVCOUNT:
-            #cv2.putText(img,str(self.spi_revcount),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,"{:.1f}".format(self.spi_revcount * self.cfg.KMPH),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,str(self.rpm),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+            #cv2.putText(img,"{:.1f}".format(self.rpm * self.cfg.KMPH),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:

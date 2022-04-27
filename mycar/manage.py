@@ -157,12 +157,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
         V.add(ctr,
             inputs=['cam/image_array_raw'],
-            outputs =['user/anglex', 'user/throttlex', 'user/mode', 'recording',
-                'ch1x', 'ch2x', 'ch3x', 'ch4x',
+            outputs =['user/angle_x', 'user/throttle_x', 'user/mode', 'recording',
+                'ch1_x', 'ch2_x', 'ch3_x', 'ch4_x',
                 'auto_record_on_throttle',
                 'constant_throttle',
                 'throttle_scale',
-                'ai_throttle_mult',
+                'ai_throttle_mult_x',
                 'auto_throttle_off',
                 'dist_slow',
                 'dist_stop',
@@ -178,10 +178,11 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         if cfg.USE_SBUS:
             from donkeycar.parts.psoc_sbus import PsocCounter
             ctr = PsocCounter(cfg, '/dev/hidPsoc', q_button)
+            V.add(ctr, outputs = ['user/angle', 'user/throttle', 'rpm', 'ch0', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'], threaded=True)
         else:
             from donkeycar.parts.psoc_counter import PsocCounter
             ctr = PsocCounter('/dev/hidPsoc')
-        V.add(ctr, outputs = ['user/angle', 'user/throttle', 'ch4', 'ch1', 'ch2', 'ch3'], threaded=True)
+            V.add(ctr, outputs = ['user/angle', 'user/throttle', 'ch4', 'ch1', 'ch2', 'ch3'], threaded=True)
 
     elif use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         #modify max_throttle closer to 1.0 to have more power
@@ -572,6 +573,20 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         from donkeycar.parts.object_detector.stop_sign_detector import StopSignDetector
         V.add(StopSignDetector(cfg.STOP_SIGN_MIN_SCORE, cfg.STOP_SIGN_SHOW_BOUNDING_BOX), inputs=['cam/image_array', 'pilot/throttle'], outputs=['pilot/throttle', 'cam/image_array'])
 
+    class SBus2Percent:
+        def __init__(self, offset, center, min, max):
+            self.offset = offset
+            self.center = center
+            self.min = min
+            self.max = max
+
+        def run(self, sbus):
+            return round(self.offset + (sbus - self.center) * 2 / (self.max - self.min), 2)
+
+    V.add(SBus2Percent(0, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch3'], outputs=['gyro_gain'])
+    V.add(SBus2Percent(1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch4'], outputs=['ai_throttle_mult'])
+    V.add(SBus2Percent(1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch5'], outputs=['ir_dist'])
+
     #Choose what inputs should change the car.
     class DriveMode:
 
@@ -863,10 +878,16 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'cam/image_array_raw',
                 'angle',
                 'throttle',
+                'rpm',
+                'ch0',
                 'ch1',
                 'ch2',
                 'ch3',
                 'ch4',
+                'ch5',
+                'ch6',
+                'ch7',
+                'ch8',
                 'imu/acl_x',
                 'imu/acl_y',
                 'imu/acl_z',
@@ -897,9 +918,11 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'recording',
                 'auto_record_on_throttle',
                 'constant_throttle',
-                'throttle_scale',
+                #'throttle_scale',
+                'gyro_gain',
                 'ai_throttle_mult',
-                'auto_throttle_off',
+                #'auto_throttle_off',
+                'ir_dist',
                 'dist_slow',
                 'dist_stop',
                 'dist_throttle_off',
@@ -931,10 +954,16 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'user/mode',
                 'pilot/angle',
                 'pilot/throttle',
+                'rpm',
+                'ch0',
                 'ch1',
                 'ch2',
                 'ch3',
                 'ch4',
+                'ch5',
+                'ch6',
+                'ch7',
+                'ch8',
                 'imu/acl_x',
                 'imu/acl_y',
                 'imu/acl_z',

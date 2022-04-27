@@ -123,8 +123,8 @@ class MakeMovie(object):
                      int(p1[1] + l1 * math.sin((a1 + 270.0) * self.deg_to_rad))))
         '''
         p1 = tuple((int(round(width/2)), int(round(height))))
-        p11 = tuple((int(round(width/2 + width/2 * user_angle)),
-                    int(round(height - height * user_throttle))))
+        p11 = tuple((int(round(width/2 + width/2 * user_angle * (1 if self.cfg.SBUS_CH1_MIN < self.cfg.SBUS_CH1_MAX else -1))),
+                    int(round(height + height * user_throttle) * (1 if self.cfg.SBUS_CH2_MIN < self.cfg.SBUS_CH2_MAX else -1))))
 
         # user is green, pilot is blue
         cv2.line(img, p1, p11, (0, 255, 0), 2)
