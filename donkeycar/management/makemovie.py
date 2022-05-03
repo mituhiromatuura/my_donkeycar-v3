@@ -103,11 +103,14 @@ class MakeMovie(object):
         user_angle = float(record["user/angle"])
         user_throttle = float(record["user/throttle"])
 
-        if record["user/mode"] == "local_angle":
-            user_angle = float(record["pilot/angle"])
-        elif record["user/mode"] == "local":
-            user_angle = float(record["pilot/angle"])
-            user_throttle = float(record["pilot/throttle"])
+        try:
+            if record["user/mode"] == "local_angle":
+                user_angle = float(record["pilot/angle"])
+            elif record["user/mode"] == "local":
+                user_angle = float(record["pilot/angle"])
+                user_throttle = float(record["pilot/throttle"])
+        except:
+            pass
 
         height, width, _ = img.shape
 
@@ -124,7 +127,7 @@ class MakeMovie(object):
         '''
         p1 = tuple((int(round(width/2)), int(round(height))))
         p11 = tuple((int(round(width/2 + width/2 * user_angle * (1 if self.cfg.SBUS_CH1_MIN < self.cfg.SBUS_CH1_MAX else -1))),
-                    int(round(height + height * user_throttle) * (1 if self.cfg.SBUS_CH2_MIN < self.cfg.SBUS_CH2_MAX else -1))))
+                    int(round(height + height * user_throttle * (1 if self.cfg.SBUS_CH2_MIN < self.cfg.SBUS_CH2_MAX else -1)))))
 
         # user is green, pilot is blue
         cv2.line(img, p1, p11, (0, 255, 0), 2)
@@ -140,6 +143,33 @@ class MakeMovie(object):
         if self.csv_file == True:
             try:
                 row = self.csv[self.iRec + 1]
+
+                i = 2+2+3+2
+                rpm = int(row[i])
+                cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
+                cv2.putText(img, "{:.1f}".format(rpm * self.cfg.KMPH),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
+
+                def SBus2Percent(sbus, offset, center, min, max):
+                    return round(offset + (sbus - center) * 2 / (max - min), 2)
+
+                i = 2+2+3+2+4
+                d = int(row[i])
+                ch3 = SBus2Percent(d, 0, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                cv2.putText(img, str(ch3),(0,19),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+5
+                d = int(row[i])
+                ch4 = SBus2Percent(d, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+6
+                d = int(row[i])
+                ch5 = SBus2Percent(d, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                cv2.putText(img, str(int(ch5*100)),(0,39),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+9
+                ch8 = int(row[i])
+                cv2.putText(img, str(ch8),(0,49),textFontFace,textFontScale,textColor,textThickness)
 
                 #try:
                 #    i = 2+2+3+2+4+9

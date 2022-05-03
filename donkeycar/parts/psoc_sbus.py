@@ -60,7 +60,7 @@ class PsocCounter:
 				if ch7 == 0:
 					if self.ch7 == self.cfg.SBUS_CH7_CENTER:
 						ch7 = self.ch7
-				elif ch7 < self.ch7 and st7 <= 1: # up
+				elif ch7 < self.ch7 and st7 <= 2: # up
 					if st7 == -4:
 						self.q_button.put([99,'D'])
 					elif st7 == -3:
@@ -73,9 +73,13 @@ class PsocCounter:
 						self.q_button.put([99,'p'])
 					elif st7 == 1:
 						self.q_button.put([99,'r'])
+					elif st7 == 2:
+						self.q_button.put([99,'d'])
 					ch7 = self.ch7
 					st7 = st7 + 1
 				elif ch7 > self.ch7 and st7 >= -4: # down
+					if st7 == 3:
+						self.q_button.put([99,'D'])
 					if st7 == 2:
 						self.q_button.put([99,'R'])
 					elif st7 == 1:

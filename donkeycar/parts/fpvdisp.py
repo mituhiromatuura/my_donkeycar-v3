@@ -336,8 +336,8 @@ class FPVDisp:
                 GPIO.output(self.gpio_pin_local_angle, self.led_on)
                 GPIO.output(self.gpio_pin_local, self.led_on)
 
-                if not self.disp_on:
-                    return
+        if not self.disp_on:
+            return
 
         cv2.namedWindow('DonkeyCamera', cv2.WINDOW_NORMAL)
         #cv2.namedWindow('DonkeyCamera', cv2.WINDOW_AUTOSIZE)
@@ -409,6 +409,7 @@ class FPVDisp:
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(int(self.auto_throttle_off*100)),(0,39),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.ch8),(0,49),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_VL53L0X:
             cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)
@@ -433,8 +434,8 @@ class FPVDisp:
         cv2.putText(img,str(self.ch2),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         if self.cfg.HAVE_REVCOUNT:
             cv2.putText(img,str(self.rpm),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
-            #cv2.putText(img,"{:.1f}".format(self.rpm * self.cfg.KMPH),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"{:.1f}".format(self.rpm * self.cfg.KMPH),(40,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+        #cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:
             #if self.disp_imu:
