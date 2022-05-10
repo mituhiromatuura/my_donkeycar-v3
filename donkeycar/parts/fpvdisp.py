@@ -106,10 +106,11 @@ class FPVDisp:
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
+        gyro_gain,
         auto_throttle_off,
         dist_slow,
         dist_stop,
-        auto_throttle_off,
+        dist_throttle_off,
         disp_on,
         esc_on,
         sw_l3,
@@ -166,6 +167,7 @@ class FPVDisp:
         self.constant_throttle = constant_throttle
         self.throttle_scale = throttle_scale
         self.ai_throttle_mult = ai_throttle_mult
+        self,gyro_gain = gyro_gain
         self.auto_throttle_off = auto_throttle_off
         self.dist_slow = dist_slow
         self.dist_stop = dist_stop
@@ -226,6 +228,7 @@ class FPVDisp:
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
+        gyro_gain,
         auto_throttle_off,
         dist_slow,
         dist_stop,
@@ -285,6 +288,7 @@ class FPVDisp:
             self.constant_throttle = constant_throttle
             self.throttle_scale = throttle_scale
             self.ai_throttle_mult = ai_throttle_mult
+            self.gyro_gain = gyro_gain
             self.auto_throttle_off = auto_throttle_off
             self.dist_slow = dist_slow
             self.dist_stop = dist_stop
@@ -408,8 +412,9 @@ class FPVDisp:
 
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(int(self.auto_throttle_off*100)),(0,39),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(self.ch8),(0,49),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(round(self.gyro_gain)),(0,39),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(round(self.auto_throttle_off)),(0,49),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_VL53L0X:
             cv2.putText(img,str(self.dist_slow),(0,49),textFontFace,textFontScale,textColor,textThickness)

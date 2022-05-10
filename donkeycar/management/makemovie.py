@@ -138,38 +138,61 @@ class MakeMovie(object):
         #textColor = (0, 0, 255)
         textThickness = 1
         cv2.putText(img, record["user/mode"],(0,9),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
+        #cv2.putText(img, str(self.iRec),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img, str(self.iRec),(120,9),textFontFace,textFontScale,textColor,textThickness)
 
         if self.csv_file == True:
-            try:
+            #try:
+            if True:
                 row = self.csv[self.iRec + 1]
+
+                i = 1
+                period_time = int(float(row[i]))
+                if period_time > 99.9:
+                    pos = (159-3*8,height-1)
+                elif period_time > 9.9:
+                    pos = (159-2*8,height-1)
+                else:
+                    pos = (159-1*8,wheight-1)
+                cv2.putText(img, str(period_time),pos,textFontFace,textFontScale,textColor,textThickness)
 
                 i = 2+2+3+2
                 rpm = int(row[i])
                 cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
                 cv2.putText(img, "{:.1f}".format(rpm * self.cfg.KMPH),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
 
-                def SBus2Percent(sbus, offset, center, min, max):
-                    return round(offset + (sbus - center) * 2 / (max - min), 2)
+                def SBus2Percent(sbus, offset, x, center, min, max):
+                    return round(offset + (sbus - center) * 2 / (max - min), 2) * x
 
                 i = 2+2+3+2+4
                 d = int(row[i])
-                ch3 = SBus2Percent(d, 0, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
-                cv2.putText(img, str(ch3),(0,19),textFontFace,textFontScale,textColor,textThickness)
+                ch3 = SBus2Percent(d, 0, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                cv2.putText(img, str(round(ch3)),(0,39),textFontFace,textFontScale,textColor,textThickness)
 
                 i = 2+2+3+2+5
                 d = int(row[i])
-                ch4 = SBus2Percent(d, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                ch4 = SBus2Percent(d, 1, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
                 cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
 
                 i = 2+2+3+2+6
                 d = int(row[i])
-                ch5 = SBus2Percent(d, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
-                cv2.putText(img, str(int(ch5*100)),(0,39),textFontFace,textFontScale,textColor,textThickness)
+                ch5 = SBus2Percent(d, 1, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
+                cv2.putText(img, str(round(ch5)),(0,49),textFontFace,textFontScale,textColor,textThickness)
 
                 i = 2+2+3+2+9
                 ch8 = int(row[i])
-                cv2.putText(img, str(ch8),(0,49),textFontFace,textFontScale,textColor,textThickness)
+                cv2.putText(img, str(ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+10+16
+                volt_a = float(row[i])
+                cv2.putText(img,str(round(volt_a,2)),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
+                i = 2+2+3+2+10+16+1
+                volt_b = float(row[i])
+                cv2.putText(img,str(round(volt_b,2)),(0,height-11),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+10+16+2+1
+                throttle_scale = float(row[i])
+                cv2.putText(img,str(round(throttle_scale,1)),(0,19),textFontFace,textFontScale,textColor,textThickness)
 
                 #try:
                 #    i = 2+2+3+2+4+9
@@ -214,8 +237,8 @@ class MakeMovie(object):
                     if dist6 < 8000:
                         cv2.putText(img,str(dist6),(width//6*5,height//5*3),textFontFace,textFontScale,circleColor(dist6),textThickness)
                     '''
-            except:
-                pass
+            #except:
+            #    pass
         
     def draw_model_prediction(self, record, img):
         '''

@@ -574,18 +574,19 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(StopSignDetector(cfg.STOP_SIGN_MIN_SCORE, cfg.STOP_SIGN_SHOW_BOUNDING_BOX), inputs=['cam/image_array', 'pilot/throttle'], outputs=['pilot/throttle', 'cam/image_array'])
 
     class SBus2Percent:
-        def __init__(self, offset, center, min, max):
+        def __init__(self, offset, x, center, min, max):
             self.offset = offset
+            self.x = x
             self.center = center
             self.min = min
             self.max = max
 
         def run(self, sbus):
-            return round(self.offset + (sbus - self.center) * 2 / (self.max - self.min), 2)
+            return (round(self.offset + (sbus - self.center) * 2 / (self.max - self.min), 2) * self.x)
 
-    V.add(SBus2Percent(0, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch3'], outputs=['gyro_gain'])
-    V.add(SBus2Percent(1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch4'], outputs=['ai_throttle_mult'])
-    V.add(SBus2Percent(1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch5'], outputs=['ir_dist'])
+    V.add(SBus2Percent(0, 100, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch3'], outputs=['gyro_gain'])
+    V.add(SBus2Percent(1, 1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch4'], outputs=['ai_throttle_mult'])
+    V.add(SBus2Percent(1, 100, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch5'], outputs=['ir_dist'])
 
     #Choose what inputs should change the car.
     class DriveMode:
@@ -918,9 +919,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'recording',
                 'auto_record_on_throttle',
                 'constant_throttle',
-                #'throttle_scale',
-                'gyro_gain',
+                'throttle_scale',
                 'ai_throttle_mult',
+                'gyro_gain',
                 #'auto_throttle_off',
                 'ir_dist',
                 'dist_slow',
