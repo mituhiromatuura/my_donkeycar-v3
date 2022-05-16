@@ -182,7 +182,7 @@ class Log:
 
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
-		f.write("n,ms,a,t,ua,ut,m,pa,pt,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,\
+		f.write("n,ms,a,t,ua,ut,m,pa,pt,kmph,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,\
 				ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3,\
 				va,vb,d0,d1,d2,d3,d4,d5,d6,d7\n")
 		for i in range(self.n):
@@ -203,6 +203,8 @@ class Log:
 			f.write(str(self.pilot_angle[i]))
 			f.write(",")
 			f.write(str(self.pilot_throttle[i]))
+			f.write(",")
+			f.write(str(self.rpm[i] * self.cfg.KMPH))
 			f.write(",")
 			f.write(str(self.rpm[i]))
 			f.write(",")

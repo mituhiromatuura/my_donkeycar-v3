@@ -156,41 +156,44 @@ class MakeMovie(object):
                     pos = (159-1*8,wheight-1)
                 cv2.putText(img, str(period_time),pos,textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2
+                i = 2+2+3+2+0 #kmph
+                kmph = float(row[i])
+                cv2.putText(img, "{:.1f}".format(kmph),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
+
+                i = 2+2+3+2+1 #rpm
                 rpm = int(row[i])
                 cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
-                cv2.putText(img, "{:.1f}".format(rpm * self.cfg.KMPH),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
 
                 def SBus2Percent(sbus, offset, x, center, min, max):
                     return round(offset + (sbus - center) * 2 / (max - min), 2) * x
 
-                i = 2+2+3+2+4
+                i = 2+2+3+2+2+3 #ch3
                 d = int(row[i])
                 ch3 = SBus2Percent(d, 0, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
                 cv2.putText(img, str(round(ch3)),(0,39),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+5
+                i = 2+2+3+2+2+4 #ch4
                 d = int(row[i])
                 ch4 = SBus2Percent(d, 1, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
                 cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+6
+                i = 2+2+3+2+2+5 #ch5
                 d = int(row[i])
                 ch5 = SBus2Percent(d, 1, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
                 cv2.putText(img, str(round(ch5)),(0,49),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+9
+                i = 2+2+3+2+2+8 #ch8
                 ch8 = int(row[i])
                 cv2.putText(img, str(ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+10+16
+                i = 2+2+3+2+2+9+16+0 #va
                 volt_a = float(row[i])
                 cv2.putText(img,str(round(volt_a,2)),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
-                i = 2+2+3+2+10+16+1
+                i = 2+2+3+2+2+9+16+1 #vb
                 volt_b = float(row[i])
                 cv2.putText(img,str(round(volt_b,2)),(0,height-11),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+10+16+2+1
+                i = 2+2+3+2+10+1+16+2+1
                 throttle_scale = float(row[i])
                 cv2.putText(img,str(round(throttle_scale,1)),(0,19),textFontFace,textFontScale,textColor,textThickness)
 
