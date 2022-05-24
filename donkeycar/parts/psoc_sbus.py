@@ -27,6 +27,17 @@ class PsocCounter:
 		self.ch6 = 0
 		self.ch7 = 0
 		self.ch8 = 0
+		self.ch9 = 0
+		self.ch10 = 0
+		self.ch11 = 0
+		self.ch12 = 0
+		self.ch13 = 0
+		self.ch14 = 0
+		self.ch15 = 0
+		self.ch16 = 0
+
+		self.q_button.put([99,'P'])
+		self.q_button.put([99,'R'])
 
 	def update(self):
 		while self.on:
@@ -37,29 +48,49 @@ class PsocCounter:
 			self.uart = open(self.dev_rc,'rb')
 			print(self.dev_rc, "open")
 
-			ch7 = 0
+			f = open(self.dev_rc,'w')
+			f.write("ok")
+			f.flush()
+			f.close()
+
+			ch7 = 0xff
 			st7 = 0
 			while self.on:
 				d = self.uart.read(16)
 				self.ch0, self.ch1, self.ch2, \
-				self.ch3, self.ch4, self.ch5, self.ch7, self.ch6, self.ch8, \
-				= struct.unpack('HHHHHHBBH', d)
+				L, H, ch4x, ch5x, ch6x, self.ch8, \
+				= struct.unpack('HHHBBHHHH', d)
 
-				'''
-				if ch3 == 0:
-					if self.ch3 == self.cfg.SBUS_CH3_CENTER:
-						ch3 = self.ch3
-				elif ch3 != self.ch3:
-					if self.ch3 == 0x400:
-						self.q_button.put([99,'d'])
-					else:
-						self.q_button.put([99,'D'])
-					ch3 = self.ch3
-				'''
+				if H == 3:
+					self.ch3 = L - 100
+				elif H == 4:
+					self.ch4 = L - 100
+				elif H == 5:
+					self.ch5 = L - 100
+				elif H == 6:
+					self.ch6 = L - 100
+				elif H == 7:
+					self.ch7 = L - 100
+				elif H == 7+1:
+					self.ch9 = L - 100
+				elif H == 7+2:
+					self.ch10 = L - 100
+				elif H == 7+3:
+					self.ch11 = L - 100
+				elif H == 7+4:
+					self.ch12 = L - 100
+				elif H == 7+5:
+					self.ch13 = L - 100
+				elif H == 7+6:
+					self.ch14 = L - 100
+				elif H == 7+7:
+					self.ch15 = L - 100
+				elif H == 7+8:
+					self.ch16 = L - 100
 
-				if ch7 == 0:
-					if self.ch7 == self.cfg.SBUS_CH7_CENTER:
-						ch7 = self.ch7
+				if ch7 == 0xff:
+					if self.ch7 == 0:
+						ch7 = 0
 				elif ch7 < self.ch7 and st7 <= 2: # up
 					if st7 == -4:
 						self.q_button.put([99,'D'])
@@ -76,7 +107,7 @@ class PsocCounter:
 					elif st7 == 2:
 						self.q_button.put([99,'d'])
 					ch7 = self.ch7
-					st7 = st7 + 1
+					st7 += 1
 				elif ch7 > self.ch7 and st7 >= -4: # down
 					if st7 == 3:
 						self.q_button.put([99,'D'])
@@ -96,7 +127,7 @@ class PsocCounter:
 						self.q_button.put([99,'P'])
 						self.q_button.put([99,'D'])
 					ch7 = self.ch7
-					st7 = st7 - 1
+					st7 -= 1
 
 	def run_threaded(self):
 		rpm = 0
@@ -114,7 +145,15 @@ class PsocCounter:
 			self.ch5, \
 			self.ch6, \
 			self.ch7, \
-			self.ch8
+			self.ch8, \
+			self.ch9, \
+			self.ch10, \
+			self.ch11, \
+			self.ch12, \
+			self.ch13, \
+			self.ch14, \
+			self.ch15, \
+			self.ch16
 
 	def shutdown(self):
 		self.on = False

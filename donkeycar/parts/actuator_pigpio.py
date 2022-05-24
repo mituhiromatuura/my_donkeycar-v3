@@ -72,42 +72,47 @@ class PiGPIO_PWM():
     def __del__(self):
         self.pgio.stop()
 
-    def set_pulse(self, pulse):
+    def set_pulse(self, pulse, trim):
         if self.inverted:
           pulse = 2 * self.center - pulse
+        pulse += trim * 10
         try:
           self.pgio.hardware_PWM(self.pin, self.freq, int(pulse * self.freq))
         except:
           pass
 
-    def run(self, pulse):
-        self.set_pulse(pulse)
+    def run(self, pulse, trim):
+        self.set_pulse(pulse, trim)
 
 
 class PiGPIO_SWPWM():
 
-    def __init__(self, pin, pgio=None, freq=75):
+    def __init__(self, pin, pgio=None, freq=75, inverted=False, center=0):
         import pigpio
 
         self.pin = pin
         self.pgio = pgio or pigpio.pi()
         self.freq = freq
+        self.inverted = inverted
+        self.center = center
         self.pgio.set_mode(self.pin, pigpio.OUTPUT)
         self.pgio.set_PWM_frequency(self.pin, self.freq)
         self.pgio.set_PWM_range(self.pin, 1000000 // self.freq)
 
-
     def __del__(self):
         self.pgio.stop()
 
-    def set_pulse(self, pulse):
+    def set_pulse(self, pulse, trim):
+        if self.inverted:
+          pulse = 2 * self.center - pulse
+        pulse += trim * 10
         try:
           self.pgio.set_PWM_dutycycle(self.pin, pulse)
         except:
           pass
 
-    def run(self, pulse):
-        self.set_pulse(pulse)
+    def run(self, pulse, trim):
+        self.set_pulse(pulse, trim)
 
 
 class JHat:
@@ -228,9 +233,9 @@ class PWMSteering:
                                         self.LEFT_ANGLE, self.RIGHT_ANGLE,
                                         self.left_pulse, self.right_pulse)
 
-    def run(self, angle):
+    def run(self, angle, trim):
         self.run_threaded(angle)
-        self.controller.set_pulse(self.pulse)
+        self.controller.set_pulse(self.pulse, trim)
 
     def shutdown(self):
         # set steering straight
@@ -263,6 +268,7 @@ class PWMThrottle:
         self.zero_pulse = zero_pulse
         self.pulse = zero_pulse
 
+        '''
         # send zero pulse to calibrate ESC
         print("Init ESC")
         self.controller.set_pulse(self.max_pulse)
@@ -273,6 +279,7 @@ class PWMThrottle:
         time.sleep(1)
         self.running = True
         print('PWM Throttle created')
+        '''
 
     def update(self):
         while self.running:
@@ -286,9 +293,9 @@ class PWMThrottle:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
                                             self.min_pulse, self.zero_pulse)
 
-    def run(self, throttle):
+    def run(self, throttle, trim):
         self.run_threaded(throttle)
-        self.controller.set_pulse(self.pulse)
+        self.controller.set_pulse(self.pulse, trim)
 
     def shutdown(self):
         # stop vehicle

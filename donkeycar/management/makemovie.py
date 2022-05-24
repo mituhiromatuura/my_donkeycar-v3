@@ -78,6 +78,13 @@ class MakeMovie(object):
             f = open('/run/shm/mycar/data/log.csv','r')
             self.csv = [row for row in csv.reader(f)]
             self.csv_file = True
+
+            row = self.csv[0]
+            n = 0
+            self.dic = {}
+            for d in row:
+                self.dic[row[n]] = n
+                n += 1
         except:
             self.csv_file = False
 
@@ -156,44 +163,42 @@ class MakeMovie(object):
                     pos = (159-1*8,wheight-1)
                 cv2.putText(img, str(period_time),pos,textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+0 #kmph
-                kmph = float(row[i])
-                cv2.putText(img, "{:.1f}".format(kmph),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
-
-                i = 2+2+3+2+1 #rpm
-                rpm = int(row[i])
-                cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
-
-                def SBus2Percent(sbus, offset, x, center, min, max):
-                    return round(offset + (sbus - center) * 2 / (max - min), 2) * x
-
-                i = 2+2+3+2+2+3 #ch3
-                d = int(row[i])
-                ch3 = SBus2Percent(d, 0, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
-                cv2.putText(img, str(round(ch3)),(0,39),textFontFace,textFontScale,textColor,textThickness)
-
-                i = 2+2+3+2+2+4 #ch4
-                d = int(row[i])
-                ch4 = SBus2Percent(d, 1, 1, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
-                cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
-
-                i = 2+2+3+2+2+5 #ch5
-                d = int(row[i])
-                ch5 = SBus2Percent(d, 1, 100, self.cfg.SBUS_CHX_CENTER, self.cfg.SBUS_CHX_MIN, self.cfg.SBUS_CHX_MAX)
-                cv2.putText(img, str(round(ch5)),(0,49),textFontFace,textFontScale,textColor,textThickness)
-
-                i = 2+2+3+2+2+8 #ch8
-                ch8 = int(row[i])
-                cv2.putText(img, str(ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
-
-                i = 2+2+3+2+2+9+16+0 #va
+                i = self.dic["va"]
                 volt_a = float(row[i])
                 cv2.putText(img,str(round(volt_a,2)),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
-                i = 2+2+3+2+2+9+16+1 #vb
+                i = self.dic["vb"]
                 volt_b = float(row[i])
                 cv2.putText(img,str(round(volt_b,2)),(0,height-11),textFontFace,textFontScale,textColor,textThickness)
 
-                i = 2+2+3+2+10+1+16+2+1
+                i = self.dic["lap"]
+                lap = float(row[i])
+                cv2.putText(img, str(lap),(0,height-21),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["kmph"]
+                kmph = float(row[i])
+                cv2.putText(img, "{:.1f}".format(kmph),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["rpm"]
+                rpm = int(row[i])
+                cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["ch3"] #gyro gain
+                ch3 = row[i]
+                cv2.putText(img, str(ch3),(0,39),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["ch4"] #ai throttle multi
+                ch4 = row[i]
+                cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["ch5"] #stop dist
+                ch5 = row[i]
+                cv2.putText(img, str(ch5),(0,49),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["ch8"] #lidar
+                ch8 = row[i]
+                cv2.putText(img, str(ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
+
+                i = self.dic["d1"] #throttle_scale
                 throttle_scale = float(row[i])
                 cv2.putText(img,str(round(throttle_scale,1)),(0,19),textFontFace,textFontScale,textColor,textThickness)
 

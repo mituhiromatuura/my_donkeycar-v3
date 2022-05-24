@@ -64,6 +64,7 @@ class FPVDisp:
         image,
         angle,
         throttle,
+        lap,
         rpm,
         ch0,
         ch1,
@@ -125,6 +126,7 @@ class FPVDisp:
         self.image = image
         self.angle = angle
         self.throttle = throttle
+        self.lap = lap,
         self.rpm = rpm,
         self.ch0 = ch0,
         self.ch1 = ch1,
@@ -186,6 +188,7 @@ class FPVDisp:
         image,
         angle,
         throttle,
+        lap,
         rpm,
         ch0,
         ch1,
@@ -246,6 +249,7 @@ class FPVDisp:
             self.image = image
             self.angle = angle
             self.throttle = throttle
+            self.lap = lap
             self.rpm = rpm
             self.ch0 = ch0
             self.ch1 = ch1
@@ -426,6 +430,7 @@ class FPVDisp:
         if self.esc_on == False:
             cv2.putText(img,'ESC OFF',(wwidth-8*7,9),textFontFace,textFontScale,textColor,textThickness)
 
+        cv2.putText(img,str(self.lap),(0,wheight-31),textFontFace,textFontScale,textColor,textThickness)
         #cv2.putText(img,str(self.cfg.DRIVE_LOOP_HZ),(0,79),textFontFace,textFontScale,textColor,textThickness)
         if self.mode == "user" and not self.auto_record_on_throttle:
             self.rectime = time.time()
@@ -564,7 +569,7 @@ class FPVDisp:
         wk = cv2.waitKey(1) & 0xff
         #if wk != 255:
         #    print(wk)
-        if wk == ord('q') or wk == 27: #esc
+        if wk == ord('q') or wk == 99 or wk == 27: # ctrl-c esc
             cv2.destroyAllWindows()
             self.on = False
         #elif wk == ord('w'):

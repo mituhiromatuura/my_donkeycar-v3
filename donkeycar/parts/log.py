@@ -12,6 +12,9 @@ class Log:
 		self.num = list()
 		self.milliseconds = list()
 
+		self.volt_a = list()
+		self.volt_b = list()
+
 		self.angle = list()
 		self.throttle = list()
 
@@ -22,8 +25,10 @@ class Log:
 		self.pilot_angle = list()
 		self.pilot_throttle = list()
 
+		self.lap = list()
 		self.rpm = list()
 		self.ch0 = list()
+
 		self.ch1 = list()
 		self.ch2 = list()
 		self.ch3 = list()
@@ -32,6 +37,14 @@ class Log:
 		self.ch6 = list()
 		self.ch7 = list()
 		self.ch8 = list()
+		self.ch9 = list()
+		self.ch10 = list()
+		self.ch11 = list()
+		self.ch12 = list()
+		self.ch13 = list()
+		self.ch14 = list()
+		self.ch15 = list()
+		self.ch16 = list()
 
 		self.acl_x = list()
 		self.acl_y = list()
@@ -50,9 +63,6 @@ class Log:
 		self.q_2 = list()
 		self.q_3 = list()
 
-		self.volt_a = list()
-		self.volt_b = list()
-
 		self.dist0 = list()
 		self.dist1 = list()
 		self.dist2 = list()
@@ -66,6 +76,9 @@ class Log:
 			num,
 			milliseconds,
 
+			volt_a,
+			volt_b,
+
 			angle,
 			throttle,
 
@@ -76,8 +89,10 @@ class Log:
 			pilot_angle,
 			pilot_throttle,
 
+			lap,
 			rpm,
 			ch0,
+
 			ch1,
 			ch2,
 			ch3,
@@ -86,6 +101,14 @@ class Log:
 			ch6,
 			ch7,
 			ch8,
+			ch9,
+			ch10,
+			ch11,
+			ch12,
+			ch13,
+			ch14,
+			ch15,
+			ch16,
 
 			acl_x,
 			acl_y,
@@ -103,9 +126,6 @@ class Log:
 			q_1,
 			q_2,
 			q_3,
-
-			volt_a,
-			volt_b,
 
 			dist0,
 			dist1,
@@ -125,6 +145,9 @@ class Log:
 				self.num.append(num)
 				self.milliseconds.append(milliseconds)
 
+				self.volt_a.append(volt_a)
+				self.volt_b.append(volt_b)
+
 				self.angle.append(angle)
 				self.throttle.append(throttle)
 
@@ -135,8 +158,10 @@ class Log:
 				self.pilot_angle.append(pilot_angle)
 				self.pilot_throttle.append(pilot_throttle)
 
+				self.lap.append(lap)
 				self.rpm.append(rpm)
 				self.ch0.append(ch0)
+
 				self.ch1.append(ch1)
 				self.ch2.append(ch2)
 				self.ch3.append(ch3)
@@ -145,6 +170,14 @@ class Log:
 				self.ch6.append(ch6)
 				self.ch7.append(ch7)
 				self.ch8.append(ch8)
+				self.ch9.append(ch9)
+				self.ch10.append(ch10)
+				self.ch11.append(ch11)
+				self.ch12.append(ch12)
+				self.ch13.append(ch13)
+				self.ch14.append(ch14)
+				self.ch15.append(ch15)
+				self.ch16.append(ch16)
 
 				self.acl_x.append(acl_x)
 				self.acl_y.append(acl_y)
@@ -163,9 +196,6 @@ class Log:
 				self.q_2.append(q_2)
 				self.q_3.append(q_3)
 
-				self.volt_a.append(volt_a)
-				self.volt_b.append(volt_b)
-
 				self.dist0.append(dist0)
 				self.dist1.append(dist1)
 				self.dist2.append(dist2)
@@ -182,13 +212,17 @@ class Log:
 
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
-		f.write("n,ms,a,t,ua,ut,m,pa,pt,kmph,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,\
-				ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3,\
-				va,vb,d0,d1,d2,d3,d4,d5,d6,d7\n")
+		f.write("n,ms,va,vb,a,t,ua,ut,m,pa,pt,lap,kmph,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,ch9,ch10,ch11,ch12,ch13,ch14,ch15,ch16," + \
+				"ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3," + \
+				"d0,d1,d2,d3,d4,d5,d6,d7\n")
 		for i in range(self.n):
 			f.write(str(self.num[i]))
 			f.write(",")
 			f.write(str(self.milliseconds[i]))
+			f.write(",")
+			f.write(str(self.volt_a[i]))
+			f.write(",")
+			f.write(str(self.volt_b[i]))
 			f.write(",")
 			f.write(str(self.angle[i]))
 			f.write(",")
@@ -203,6 +237,8 @@ class Log:
 			f.write(str(self.pilot_angle[i]))
 			f.write(",")
 			f.write(str(self.pilot_throttle[i]))
+			f.write(",")
+			f.write(str(self.lap[i]))
 			f.write(",")
 			f.write(str(self.rpm[i] * self.cfg.KMPH))
 			f.write(",")
@@ -225,6 +261,22 @@ class Log:
 			f.write(str(self.ch7[i]))
 			f.write(",")
 			f.write(str(self.ch8[i]))
+			f.write(",")
+			f.write(str(self.ch9[i]))
+			f.write(",")
+			f.write(str(self.ch10[i]))
+			f.write(",")
+			f.write(str(self.ch11[i]))
+			f.write(",")
+			f.write(str(self.ch12[i]))
+			f.write(",")
+			f.write(str(self.ch13[i]))
+			f.write(",")
+			f.write(str(self.ch14[i]))
+			f.write(",")
+			f.write(str(self.ch15[i]))
+			f.write(",")
+			f.write(str(self.ch16[i]))
 			f.write(",")
 			f.write(str(self.acl_x[i]))
 			f.write(",")
@@ -257,10 +309,6 @@ class Log:
 			f.write(str(self.q_2[i]))
 			f.write(",")
 			f.write(str(self.q_3[i]))
-			f.write(",")
-			f.write(str(self.volt_a[i]))
-			f.write(",")
-			f.write(str(self.volt_b[i]))
 			f.write(",")
 			f.write(str(self.dist0[i]))
 			f.write(",")

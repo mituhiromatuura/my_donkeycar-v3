@@ -161,7 +161,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'ch1_x', 'ch2_x', 'ch3_x', 'ch4_x',
                 'auto_record_on_throttle',
                 'constant_throttle',
-                'throttle_scale',
+                'throttle_scale_x',
                 'ai_throttle_mult_x',
                 'auto_throttle_off',
                 'dist_slow',
@@ -178,7 +178,23 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         if cfg.USE_SBUS:
             from donkeycar.parts.psoc_sbus import PsocCounter
             ctr = PsocCounter(cfg, '/dev/hidPsoc', q_button)
-            V.add(ctr, outputs = ['user/angle', 'user/throttle', 'rpm', 'ch0', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'], threaded=True)
+            V.add(ctr, outputs = ['user/angle', 'user/throttle', 'rpm', 'ch0', 
+                                  'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8', 
+                                  'ch9', 'ch10', 'ch11', 'ch12',
+                                  'ch13', 'ch14', 'ch15', 'ch16'], threaded=True)
+
+            class SBus2Percent:
+                def __init__(self, offset, x):
+                    self.offset = offset
+                    self.x = x
+
+                def run(self, sbus):
+                    return round((self.offset + sbus) * self.x, 2)
+
+            V.add(SBus2Percent(100, 0.01), inputs=['ch3'], outputs=['throttle_scale'])
+            V.add(SBus2Percent(100, 0.01), inputs=['ch4'], outputs=['ai_throttle_mult'])
+            V.add(SBus2Percent(100, 1   ), inputs=['ch5'], outputs=['lidarlite'])
+            V.add(SBus2Percent(  0, 1   ), inputs=['ch6'], outputs=['gyro_gain'])
         else:
             from donkeycar.parts.psoc_counter import PsocCounter
             ctr = PsocCounter('/dev/hidPsoc')
@@ -573,21 +589,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         from donkeycar.parts.object_detector.stop_sign_detector import StopSignDetector
         V.add(StopSignDetector(cfg.STOP_SIGN_MIN_SCORE, cfg.STOP_SIGN_SHOW_BOUNDING_BOX), inputs=['cam/image_array', 'pilot/throttle'], outputs=['pilot/throttle', 'cam/image_array'])
 
-    class SBus2Percent:
-        def __init__(self, offset, x, center, min, max):
-            self.offset = offset
-            self.x = x
-            self.center = center
-            self.min = min
-            self.max = max
-
-        def run(self, sbus):
-            return (round(self.offset + (sbus - self.center) * 2 / (self.max - self.min), 2) * self.x)
-
-    V.add(SBus2Percent(0, 100, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch3'], outputs=['gyro_gain'])
-    V.add(SBus2Percent(1, 1, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch4'], outputs=['ai_throttle_mult'])
-    V.add(SBus2Percent(1, 100, cfg.SBUS_CHX_CENTER, cfg.SBUS_CHX_MIN, cfg.SBUS_CHX_MAX), inputs=['ch5'], outputs=['ir_dist'])
-
     #Choose what inputs should change the car.
     class DriveMode:
 
@@ -599,48 +600,36 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     pilot_angle, pilot_throttle,
                     throttle_scale,
                     ai_throttle_mult,
-                    auto_throttle_off,
-                    dist_slow,
-                    dist_stop,
-                    dist_throttle_off,
-                    dist0,dist1,dist2,dist3,dist4,dist5,dist6,dist7):
+                    lidarlite,
+                    ch8):
 
             if mode == 'user':
-                if user_throttle > 0:
-                    user_throttle = user_throttle * throttle_scale
-
-                    if cfg.HAVE_VL53L0X:
-                        if dist4 < dist_stop:
-                            user_throttle = -0.5
-                        elif dist4 < dist_slow:
-                            user_throttle = user_throttle * dist_throttle_off
-
+                user_throttle *= throttle_scale
                 return user_angle, user_throttle
 
             elif mode == 'local_angle':
                 pilot_angle = pilot_angle if pilot_angle else 0.0
-                user_throttle = user_throttle * throttle_scale
+
+                user_throttle *= throttle_scale
                 return pilot_angle, user_throttle
 
             else:
-                if abs(self.angle - pilot_angle) < 0.3:
-                    pilot_angle = pilot_angle if pilot_angle else 0.0
-                    self.angle = pilot_angle
+                pilot_angle = pilot_angle if pilot_angle else 0.0
+                pilot_throttle = pilot_throttle if pilot_throttle else 0.0
 
-                pilot_throttle = pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
+                if abs(self.angle - pilot_angle) < 0.3:
+                    self.angle = pilot_angle
+                else:
+                    pilot_angle = self.angle
+
                 if user_throttle > throttle_scale * 0.5:
                     return pilot_angle, -0.5
 
-                if cfg.HAVE_VL53L0X:
-                    if dist4 < dist_stop:
+                if lidarlite != 0:
+                    if lidarlite > ch8:
                         pilot_throttle = -0.5
-                    elif dist4 < dist_slow:
-                        pilot_throttle = pilot_throttle * dist_throttle_off
-                    #else:
-                    #    pilot_throttle = pilot_throttle * (1 - abs(pilot_angle)) * auto_throttle_off
-                #else:
-                #    pilot_throttle = pilot_throttle * (1 - abs(pilot_angle)) * auto_throttle_off
 
+                pilot_throttle *= throttle_scale * ai_throttle_mult
                 return pilot_angle, pilot_throttle
 
     V.add(DriveMode(),
@@ -648,11 +637,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                   'pilot/angle', 'pilot/throttle',
                   'throttle_scale',
                   'ai_throttle_mult',
-                  'auto_throttle_off',
-                  'dist_slow',
-                  'dist_stop',
-                  'dist_throttle_off',
-                  'dist0', 'dist1', 'dist2', 'dist3', 'dist4', 'dist5', 'dist6', 'dist7'],
+                  'lidarlite',
+                  'ch8'],
           outputs=['angle', 'throttle'])
 
 
@@ -660,15 +646,50 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         def __init__(self, q_rfcomm):
             self.q_rfcomm = q_rfcomm
+            self.esc_on = False
+            self.recording = False
+            self.mode = ""
+            self.throttle_scale = 201
+            self.ai_throttle_mult = 201
+            self.gyro_gain = 201
+            self.lidarlite = 201
+
+            self.q_rfcomm.put("ESC:"+ ("ON" if self.esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
+            self.q_rfcomm.put("REC:"+ ("ON" if self.recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+
             self.sec = time.time()
 
-        def run(self, ina226):
+        def run(self, esc_on, recording, mode, throttle_scale, ai_throttle_mult, gyro_gain, lidarlite, volt_a, volt_b):
+            if self.mode != mode:
+                self.mode = mode
+                self.q_rfcomm.put(self.mode[0:7] + " 110,0,130,60,3\n")
+            if self.throttle_scale != throttle_scale:
+                self.throttle_scale = throttle_scale
+                self.q_rfcomm.put(str(self.throttle_scale) + " 15," + str(30*0) +",95,30,3\n")
+            if self.ai_throttle_mult != ai_throttle_mult:
+                self.ai_throttle_mult = ai_throttle_mult
+                self.q_rfcomm.put(str(self.ai_throttle_mult) + " 15," + str(30*1) +",95,30,3\n")
+            if self.gyro_gain != gyro_gain:
+                self.gyro_gain = gyro_gain
+                self.q_rfcomm.put(str(self.gyro_gain) + " 15," + str(30*2) +",95,30,3\n")
+            if self.lidarlite != lidarlite:
+                self.lidarlite = lidarlite
+                self.q_rfcomm.put(str(self.lidarlite) + " 15," + str(30*3) +",95,30,3\n")
+            if self.esc_on != esc_on:
+                self.esc_on = esc_on
+                self.q_rfcomm.put("ESC:"+ ("ON" if esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
+            if self.recording != recording:
+                self.recording = recording
+                self.q_rfcomm.put("REC:"+ ("ON" if recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+
             if time.time() - self.sec > 1:
                 self.sec = time.time()
-                self.q_rfcomm.put("VOLT:" + str(ina226))
+                self.q_rfcomm.put(str(round(volt_b,2)) + " 15," + str(30*6) +",95,30,3\n")
+                self.q_rfcomm.put(str(round(volt_a,2)) + " 15," + str(30*7) +",95,30,3\n")
+
 
     if cfg.USE_RFCOMM:
-        V.add(V2Esp32(q_rfcomm), inputs=['volt_a'])
+        V.add(V2Esp32(q_rfcomm), inputs=['esc_on', 'recording', 'user/mode', 'throttle_scale', 'ai_throttle_mult', 'gyro_gain', 'lidarlite', 'volt_a', 'volt_b'])
 
 
     '''
@@ -788,15 +809,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                                             max_pulse=cfg.THROTTLE_FORWARD_PWM,
                                             zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        V.add(steering, inputs=['angle'])
-        V.add(throttle, inputs=['throttle'])
+        V.add(steering, inputs=['angle', 'ch9'])
+        V.add(throttle, inputs=['throttle', 'ch10'])
     
-        if cfg.HAVE_VL53L0X:
-            Pan_controller = PiGPIO_SWPWM(pin=19, freq=50)
-            Pan = PWMSteering(controller=Pan_controller,
-                                            left_pulse=cfg.LIDAR_RIGHT_PWM, 
-                                            right_pulse=cfg.LIDAR_LEFT_PWM)
-            V.add(Pan, inputs=['angle'])
+        lidar_controller = PiGPIO_SWPWM(cfg.LIDAR_PWM_PIN, freq=cfg.LIDAR_PWM_FREQ, inverted=cfg.LIDAR_PWM_INVERTED,
+                                      center=cfg.LIDAR_CENTER_PWM)
+        lidar = PWMSteering(controller=lidar_controller,
+                                        left_pulse=cfg.LIDAR_RIGHT_PWM, 
+                                        right_pulse=cfg.LIDAR_LEFT_PWM)
+        V.add(lidar, inputs=['angle', 'ch13'])
 
     elif cfg.DRIVE_TRAIN_TYPE == "PSOC_I2C_PWM":
         from donkeycar.parts.actuator_psoc import PsocI2cPwm
@@ -879,6 +900,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'cam/image_array_raw',
                 'angle',
                 'throttle',
+                'lap',
                 'rpm',
                 'ch0',
                 'ch1',
@@ -923,7 +945,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'ai_throttle_mult',
                 'gyro_gain',
                 #'auto_throttle_off',
-                'ir_dist',
+                'lidarlite',
                 'dist_slow',
                 'dist_stop',
                 'dist_throttle_off',
@@ -940,7 +962,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     if cfg.HAVE_BUZZER:
         from donkeycar.parts.buzzer import Buzzer
-        V.add(Buzzer(cfg, q_rfcomm), inputs=['user/mode', 'tub/num_records'])
+        V.add(Buzzer(cfg, q_rfcomm), inputs=['esc_on', 'tub/num_records', 'period_time', 'imu/gyr_z'], outputs=['lap'])
 
     if True:
         from donkeycar.parts.log import Log
@@ -948,6 +970,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             inputs=[
                 'tub/num_records',
                 'period_time',
+                'volt_a',
+                'volt_b',
                 'angle',
                 'throttle',
                 'user/angle',
@@ -955,6 +979,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'user/mode',
                 'pilot/angle',
                 'pilot/throttle',
+                'lap',
                 'rpm',
                 'ch0',
                 'ch1',
@@ -965,6 +990,14 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'ch6',
                 'ch7',
                 'ch8',
+                'ch9',
+                'ch10',
+                'ch11',
+                'ch12',
+                'ch13',
+                'ch14',
+                'ch15',
+                'ch16',
                 'imu/acl_x',
                 'imu/acl_y',
                 'imu/acl_z',
@@ -981,8 +1014,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'imu/q_1',
                 'imu/q_2',
                 'imu/q_3',
-                'volt_a',
-                'volt_b',
                 'dist0',
                 #'dist1',
                 #'dist2',
