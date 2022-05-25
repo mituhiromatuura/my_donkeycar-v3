@@ -26,6 +26,7 @@ class Log:
 		self.pilot_throttle = list()
 
 		self.lap = list()
+		self.kmph = list()
 		self.rpm = list()
 		self.ch0 = list()
 
@@ -63,14 +64,10 @@ class Log:
 		self.q_2 = list()
 		self.q_3 = list()
 
-		self.dist0 = list()
-		self.dist1 = list()
-		self.dist2 = list()
-		self.dist3 = list()
-		self.dist4 = list()
-		self.dist5 = list()
-		self.dist6 = list()
-		self.dist7 = list()
+		self.throttle_scale = list()
+		self.ai_throttle_mult = list()
+		self.gyro_gain = list()
+		self.stop_range = list()
 
 	def run(self,
 			num,
@@ -90,6 +87,7 @@ class Log:
 			pilot_throttle,
 
 			lap,
+			kmph,
 			rpm,
 			ch0,
 
@@ -127,14 +125,10 @@ class Log:
 			q_2,
 			q_3,
 
-			dist0,
-			dist1,
-			dist2,
-			dist3,
-			dist4,
-			dist5,
-			dist6,
-			dist7
+			throttle_scale,
+			ai_throttle_mult,
+			gyro_gain,
+			stop_range,
 			):
 
 		if type(num) == int:
@@ -159,6 +153,7 @@ class Log:
 				self.pilot_throttle.append(pilot_throttle)
 
 				self.lap.append(lap)
+				self.kmph.append(kmph)
 				self.rpm.append(rpm)
 				self.ch0.append(ch0)
 
@@ -196,14 +191,10 @@ class Log:
 				self.q_2.append(q_2)
 				self.q_3.append(q_3)
 
-				self.dist0.append(dist0)
-				self.dist1.append(dist1)
-				self.dist2.append(dist2)
-				self.dist3.append(dist3)
-				self.dist4.append(dist4)
-				self.dist5.append(dist5)
-				self.dist6.append(dist6)
-				self.dist7.append(dist7)
+				self.throttle_scale.append(throttle_scale)
+				self.ai_throttle_mult.append(ai_throttle_mult)
+				self.gyro_gain.append(gyro_gain)
+				self.stop_range.append(stop_range)
 
 	def shutdown(self):
 		if self.n < 1:
@@ -212,9 +203,10 @@ class Log:
 
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
-		f.write("n,ms,va,vb,a,t,ua,ut,m,pa,pt,lap,kmph,rpm,ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,ch9,ch10,ch11,ch12,ch13,ch14,ch15,ch16," + \
+		f.write("n,ms,va,vb,a,t,ua,ut,m,pa,pt,lap,kmph,rpm,ch0," + \
+				"ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,ch9,ch10,ch11,ch12,ch13,ch14,ch15,ch16," + \
 				"ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3," + \
-				"d0,d1,d2,d3,d4,d5,d6,d7\n")
+				"throttle_scale,ai_throttle_mult,gyro_gain,stop_range\n")
 		for i in range(self.n):
 			f.write(str(self.num[i]))
 			f.write(",")
@@ -240,7 +232,7 @@ class Log:
 			f.write(",")
 			f.write(str(self.lap[i]))
 			f.write(",")
-			f.write(str(self.rpm[i] * self.cfg.KMPH))
+			f.write(str(self.kmph[i]))
 			f.write(",")
 			f.write(str(self.rpm[i]))
 			f.write(",")
@@ -310,21 +302,13 @@ class Log:
 			f.write(",")
 			f.write(str(self.q_3[i]))
 			f.write(",")
-			f.write(str(self.dist0[i]))
+			f.write(str(self.throttle_scale[i]))
 			f.write(",")
-			f.write(str(self.dist1[i]))
+			f.write(str(self.ai_throttle_mult[i]))
 			f.write(",")
-			f.write(str(self.dist2[i]))
+			f.write(str(self.gyro_gain[i]))
 			f.write(",")
-			f.write(str(self.dist3[i]))
-			f.write(",")
-			f.write(str(self.dist4[i]))
-			f.write(",")
-			f.write(str(self.dist5[i]))
-			f.write(",")
-			f.write(str(self.dist6[i]))
-			f.write(",")
-			f.write(str(self.dist7[i]))
+			f.write(str(self.stop_range[i]))
 			f.write("\n")
 		f.close()
 		print("log.csv save end")

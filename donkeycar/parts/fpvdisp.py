@@ -50,7 +50,7 @@ class FPVDisp:
         time.sleep(0.5)
         GPIO.output(self.gpio_pin_buzzer, GPIO.LOW)
 
-        #self.fullscreen = True
+        self.fullscreen = True
         self.disp_imu = True
         self.disp_callsign = self.cfg.VTB_ON
         self.on = True
@@ -65,6 +65,7 @@ class FPVDisp:
         angle,
         throttle,
         lap,
+        kmph,
         rpm,
         ch0,
         ch1,
@@ -93,30 +94,15 @@ class FPVDisp:
         imu_q_3,
         volt_a,
         volt_b,
-        dist0,
-        dist1,
-        dist2,
-        dist3,
-        dist4,
-        dist5,
-        dist6,
-        dist7,
-        pwmcount,
         recording,
         auto_record_on_throttle,
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
         gyro_gain,
-        auto_throttle_off,
-        dist_slow,
-        dist_stop,
-        dist_throttle_off,
+        stop_range,
         disp_on,
         esc_on,
-        sw_l3,
-        sw_r3,
-        stop,
         num_records,
         period_time):
 
@@ -127,6 +113,7 @@ class FPVDisp:
         self.angle = angle
         self.throttle = throttle
         self.lap = lap,
+        self.kmph = kmph,
         self.rpm = rpm,
         self.ch0 = ch0,
         self.ch1 = ch1,
@@ -155,30 +142,15 @@ class FPVDisp:
         self.imu_q_3 = imu_q_3
         self.volt_a = volt_a
         self.volt_b = volt_b
-        self.dist0 = dist0
-        self.dist1 = dist1
-        self.dist2 = dist2
-        self.dist3 = dist3
-        self.dist4 = dist4
-        self.dist5 = dist5
-        self.dist6 = dist6
-        self.dist7 = dist7
-        self.pwmcount = pwmcount
         self.recording = recording
         self.auto_record_on_throttle = auto_record_on_throttle
         self.constant_throttle = constant_throttle
         self.throttle_scale = throttle_scale
         self.ai_throttle_mult = ai_throttle_mult
         self,gyro_gain = gyro_gain
-        self.auto_throttle_off = auto_throttle_off
-        self.dist_slow = dist_slow
-        self.dist_stop = dist_stop
-        self.dist_throttle_off = dist_throttle_off
+        self.stop_range = stop_range
         self.disp_on = disp_on
         self.esc_on = esc_on
-        self.sw_l3 = sw_l3
-        self.sw_r3 = sw_r3
-        self.stop = stop
         self.num_records = num_records
         self.period_time = period_time
     '''
@@ -189,6 +161,7 @@ class FPVDisp:
         angle,
         throttle,
         lap,
+        kmph,
         rpm,
         ch0,
         ch1,
@@ -217,30 +190,15 @@ class FPVDisp:
         imu_q_3,
         volt_a,
         volt_b,
-        dist0,
-        dist1,
-        dist2,
-        dist3,
-        dist4,
-        dist5,
-        dist6,
-        dist7,
-        pwmcount,
         recording,
         auto_record_on_throttle,
         constant_throttle,
         throttle_scale,
         ai_throttle_mult,
         gyro_gain,
-        auto_throttle_off,
-        dist_slow,
-        dist_stop,
-        dist_throttle_off,
+        stop_range,
         disp_on,
         esc_on,
-        sw_l3,
-        sw_r3,
-        stop,
         num_records,
         period_time):
 
@@ -250,6 +208,7 @@ class FPVDisp:
             self.angle = angle
             self.throttle = throttle
             self.lap = lap
+            self.kmph = kmph
             self.rpm = rpm
             self.ch0 = ch0
             self.ch1 = ch1
@@ -278,30 +237,15 @@ class FPVDisp:
             self.imu_q_3 = imu_q_3
             self.volt_a = volt_a
             self.volt_b = volt_b
-            self.dist0 = dist0
-            self.dist1 = dist1
-            self.dist2 = dist2
-            self.dist3 = dist3
-            self.dist4 = dist4
-            self.dist5 = dist5
-            self.dist6 = dist6
-            self.dist7 = dist7
-            self.pwmcount = pwmcount
             self.recording = recording
             self.auto_record_on_throttle = auto_record_on_throttle
             self.constant_throttle = constant_throttle
             self.throttle_scale = throttle_scale
             self.ai_throttle_mult = ai_throttle_mult
             self.gyro_gain = gyro_gain
-            self.auto_throttle_off = auto_throttle_off
-            self.dist_slow = dist_slow
-            self.dist_stop = dist_stop
-            self.dist_throttle_off = dist_throttle_off
+            self.stop_range = stop_range
             self.disp_on = disp_on
             self.esc_on = esc_on
-            self.sw_l3 = sw_l3,
-            self.sw_r3 = sw_r3,
-            self.stop = stop
             self.num_records = num_records
             self.period_time = period_time
 
@@ -416,8 +360,8 @@ class FPVDisp:
 
         cv2.putText(img,str(self.throttle_scale),(0,19),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ai_throttle_mult),(0,29),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(round(self.gyro_gain)),(0,39),textFontFace,textFontScale,textColor,textThickness)
-        cv2.putText(img,str(round(self.auto_throttle_off)),(0,49),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.gyro_gain),(0,39),textFontFace,textFontScale,textColor,textThickness)
+        cv2.putText(img,str(self.stop_range),(0,49),textFontFace,textFontScale,textColor,textThickness)
         cv2.putText(img,str(self.ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_VL53L0X:
@@ -425,8 +369,6 @@ class FPVDisp:
             cv2.putText(img,str(self.dist_stop),(0,59),textFontFace,textFontScale,textColor,textThickness)
             cv2.putText(img,str(self.dist_throttle_off),(0,69),textFontFace,textFontScale,textColor,textThickness)
 
-        if self.stop == True:
-            cv2.putText(img,'STOP',(65,69),textFontFace,textFontScale,(255,0,0),textThickness)
         if self.esc_on == False:
             cv2.putText(img,'ESC OFF',(wwidth-8*7,9),textFontFace,textFontScale,textColor,textThickness)
 
@@ -444,7 +386,7 @@ class FPVDisp:
         cv2.putText(img,str(self.ch2),(127,wheight-11),textFontFace,textFontScale,textColor,textThickness)
         if self.cfg.HAVE_REVCOUNT:
             cv2.putText(img,str(self.rpm),(90,wheight-1),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,"{:.1f}".format(self.rpm * self.cfg.KMPH),(40,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"{:.1f}".format(self.kmph),(40,wheight-1),textFontFace,textFontScale,textColor,textThickness)
         #cv2.putText(img,str(self.throttle),(100,wheight-31),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_IMU:
@@ -488,8 +430,8 @@ class FPVDisp:
                 cv2.circle(img,(x ,y),2,(0,0,255),-1)
 
         if self.cfg.HAVE_INA226:
-            cv2.putText(img,str(round(self.volt_b,2)),(0,wheight-11),textFontFace,textFontScale,textColor,textThickness)
-            cv2.putText(img,str(round(self.volt_a,2)),(0,wheight-1),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"{:.2f}".format(self.volt_b),(0,wheight-11),textFontFace,textFontScale,textColor,textThickness)
+            cv2.putText(img,"{:.2f}".format(self.volt_a),(0,wheight-1),textFontFace,textFontScale,textColor,textThickness)
 
         if self.cfg.HAVE_ADS1115:
             cv2.circle(img,(wwidth//4*1,wheight//2),int(self.dist2*40),(0,255,0),1)
@@ -557,8 +499,7 @@ class FPVDisp:
             pos = (159-1*8,wheight-1)
         cv2.putText(img,str(int(self.period_time)),pos,textFontFace,textFontScale,period_color,textThickness)
 
-        #if self.fullscreen:
-        if self.sw_l3:
+        if self.fullscreen:
             cv2.resizeWindow("DonkeyCamera",wwidth*3,wheight*3)
             #cv2.setWindowProperty('DonkeyCamera', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         else:

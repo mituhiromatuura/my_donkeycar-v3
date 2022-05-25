@@ -186,8 +186,6 @@ class JoystickController(object):
         self.disp_on = disp_on
         self.VTXPower_value = VTXPower_value
         self.esc_on = False
-        self.sw_l3 = False
-        self.sw_r3 = False
 
         self.fram = Fram()
         self.throttle_scale, self.have_fram = self.fram.read_f(0)
@@ -197,17 +195,10 @@ class JoystickController(object):
             self.ai_throttle_mult = round(self.ai_throttle_mult, 1)
             self.auto_throttle_off, tmp = self.fram.read_f(2)
             self.auto_throttle_off = round(self.auto_throttle_off, 1)
-            self.dist_slow, tmp = self.fram.read_l(3)
-            self.dist_stop, tmp = self.fram.read_l(4)
-            self.dist_throttle_off, tmp = self.fram.read_f(5)
-            self.dist_throttle_off = round(self.dist_throttle_off, 1)
         else:
             self.throttle_scale = 1.0
             self.ai_throttle_mult = 1.0
             self.auto_throttle_off = 0.0
-            self.dist_slow = 0
-            self.dist_stop = 0
-            self.dist_throttle_off = 0.0
 
         self.ch1 = 0
         self.ch2 = 0
@@ -478,22 +469,6 @@ class JoystickController(object):
         print('esc_sw_toggle:', self.esc_on)
 
 
-    def sw_l3_toggle(self):
-        if self.sw_l3:
-            self.sw_l3 = False
-        else:
-            self.sw_l3 = True
-        print('toggle_l3:', self.sw_l3)
-
-
-    def sw_r3_toggle(self):
-        if self.sw_r3:
-            self.sw_r3 = False
-        else:
-            self.sw_r3 = True
-        print('toggle_r3:', self.sw_r3)
-
-
     def toggle_constant_throttle(self):
         '''
         toggle constant throttle
@@ -537,13 +512,8 @@ class JoystickController(object):
                self.throttle_scale, \
                self.ai_throttle_mult, \
                self.auto_throttle_off, \
-               self.dist_slow, \
-               self.dist_stop, \
-               self.dist_throttle_off, \
                self.disp_on, \
                self.esc_on, \
-               self.sw_l3, \
-               self.sw_r3, \
                self.VTXPower_value
 
 
@@ -652,42 +622,6 @@ class TTUJoystickController(JoystickController):
         if self.have_fram:
             self.fram.write_f(2, self.auto_throttle_off)
 
-    def decrease_dist_slow(self):
-        self.dist_slow = self.dist_slow - 10
-        print("dist_slow", self.dist_slow)
-        if self.have_fram:
-            self.fram.write_l(3, self.dist_slow)
-
-    def increase_dist_slow(self):
-        self.dist_slow = self.dist_slow + 10
-        print("dist_slow", self.dist_slow)
-        if self.have_fram:
-            self.fram.write_l(3, self.dist_slow)
-
-    def decrease_dist_stop(self):
-        self.dist_stop = self.dist_stop - 10
-        print("dist_stop", self.dist_stop)
-        if self.have_fram:
-            self.fram.write_l(4, self.dist_stop)
-
-    def increase_dist_stop(self):
-        self.dist_stop = self.dist_stop + 10
-        print("dist_stop", self.dist_stop)
-        if self.have_fram:
-            self.fram.write_l(4, self.dist_stop)
-
-    def decrease_dist_throttle_off(self):
-        self.dist_throttle_off = round(self.dist_throttle_off - 0.1, 1)
-        print("dist_throttle_off", self.dist_throttle_off)
-        if self.have_fram:
-            self.fram.write_f(5, self.dist_throttle_off)
-
-    def increase_dist_throttle_off(self):
-        self.dist_throttle_off = round(self.dist_throttle_off + 0.1, 1)
-        print("dist_throttle_off", self.dist_throttle_off)
-        if self.have_fram:
-            self.fram.write_f(5, self.dist_throttle_off)
-
     def update(self):
         while True:
             d = self.q_button.get()
@@ -739,24 +673,6 @@ class TTUJoystickController(JoystickController):
                 elif(d[1] == '5'):
                     self.decrease_auto_throttle_off()
                     #self.q_rfcomm.put("ATOFF:" + str(self.auto_throttle_off))
-                elif(d[1] == '3'):
-                    self.increase_dist_slow()
-                    #self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[1] == '2'):
-                    self.decrease_dist_slow()
-                    #self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[1] == '.'):
-                    self.increase_dist_stop()
-                    #self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                elif(d[1] == '0'):
-                    self.decrease_dist_stop()
-                    #self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                elif(d[1] == '+'):
-                    self.increase_dist_throttle_off()
-                    #self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
-                elif(d[1] == '-'):
-                    self.decrease_dist_throttle_off()
-                    #self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
                 elif(d[1] == 'd'):
                     self.disp_sw_off()
                 elif(d[1] == 'D'):
@@ -806,24 +722,6 @@ class TTUJoystickController(JoystickController):
                 elif(d[1] == "ATOFF:-\n"):
                     self.decrease_auto_throttle_off()
                     #self.q_rfcomm.put("ATOFF:" + str(self.auto_throttle_off))
-                elif(d[1] == "DSLOW:+\n"):
-                    self.increase_dist_slow()
-                    #self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[1] == "DSLOW:-\n"):
-                    self.decrease_dist_slow()
-                    #self.q_rfcomm.put("DSLOW:" + str(self.dist_slow))
-                elif(d[1] == "DSTOP:+\n"):
-                    self.increase_dist_stop()
-                    #self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                elif(d[1] == "DSTOP:-\n"):
-                    self.decrease_dist_stop()
-                    #self.q_rfcomm.put("DSTOP:" + str(self.dist_stop))
-                elif(d[1] == "DTOFF:+\n"):
-                    self.increase_dist_throttle_off()
-                    #self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
-                elif(d[1] == "DTOFF:-\n"):
-                    self.decrease_dist_throttle_off()
-                    #self.q_rfcomm.put("DTOFF:" + str(self.dist_throttle_off))
                 else:
                     bz = False
 

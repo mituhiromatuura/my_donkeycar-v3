@@ -37,6 +37,15 @@ if [ ! -e $LOGS ]; then
 fi
 
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
+
+  LAST=$(</dev/shm/date.txt)
+  echo "$LAST"
+  NOW=`date "+%s"`
+  echo "$NOW"
+  if (( "$LAST" + 10 > "$NOW" )); then
+    exit
+  fi
+
   rm -r $MYCAR/
   mkdir $MYCAR
   mkdir $MYCAR/data
@@ -72,6 +81,8 @@ if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
 
   vcgencmd measure_clock arm
   vcgencmd measure_temp
+
+  date "+%s" > /dev/shm/date.txt
 fi
 
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ] || [ $1 = "z" ]; then

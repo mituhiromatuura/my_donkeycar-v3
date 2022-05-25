@@ -164,43 +164,43 @@ class MakeMovie(object):
                 cv2.putText(img, str(period_time),pos,textFontFace,textFontScale,textColor,textThickness)
 
                 i = self.dic["va"]
-                volt_a = float(row[i])
-                cv2.putText(img,str(round(volt_a,2)),(0,height-1),textFontFace,textFontScale,textColor,textThickness)
+                volt_a = "{:.2f}".format(float(row[i]))
+                cv2.putText(img, volt_a,(0,height-1),textFontFace,textFontScale,textColor,textThickness)
                 i = self.dic["vb"]
-                volt_b = float(row[i])
-                cv2.putText(img,str(round(volt_b,2)),(0,height-11),textFontFace,textFontScale,textColor,textThickness)
+                volt_b = "{:.2f}".format(float(row[i]))
+                cv2.putText(img, volt_b,(0,height-11),textFontFace,textFontScale,textColor,textThickness)
 
                 i = self.dic["lap"]
-                lap = float(row[i])
-                cv2.putText(img, str(lap),(0,height-21),textFontFace,textFontScale,textColor,textThickness)
+                lap = row[i]
+                cv2.putText(img, lap,(0,height-21),textFontFace,textFontScale,textColor,textThickness)
 
                 i = self.dic["kmph"]
-                kmph = float(row[i])
-                cv2.putText(img, "{:.1f}".format(kmph),(40,height-1),textFontFace,textFontScale,textColor,textThickness)
+                kmph = "{:.1f}".format(float(row[i]))
+                cv2.putText(img, kmph,(40,height-1),textFontFace,textFontScale,textColor,textThickness)
 
                 i = self.dic["rpm"]
-                rpm = int(row[i])
-                cv2.putText(img, str(rpm),(90,height-1),textFontFace,textFontScale,textColor,textThickness)
+                rpm = row[i]
+                cv2.putText(img, rpm,(90,height-1),textFontFace,textFontScale,textColor,textThickness)
 
-                i = self.dic["ch3"] #gyro gain
-                ch3 = row[i]
-                cv2.putText(img, str(ch3),(0,39),textFontFace,textFontScale,textColor,textThickness)
+                i = self.dic["gyro_gain"]
+                gyro_gain = row[i]
+                cv2.putText(img, gyro_gain,(0,39),textFontFace,textFontScale,textColor,textThickness)
 
-                i = self.dic["ch4"] #ai throttle multi
-                ch4 = row[i]
-                cv2.putText(img, str(ch4),(0,29),textFontFace,textFontScale,textColor,textThickness)
+                i = self.dic["ai_throttle_mult"]
+                ai_throttle_mult = "{:.2f}".format(float(row[i]))
+                cv2.putText(img, ai_throttle_mult,(0,29),textFontFace,textFontScale,textColor,textThickness)
 
-                i = self.dic["ch5"] #stop dist
-                ch5 = row[i]
-                cv2.putText(img, str(ch5),(0,49),textFontFace,textFontScale,textColor,textThickness)
+                i = self.dic["stop_range"]
+                stop_range = row[i]
+                cv2.putText(img, stop_range,(0,49),textFontFace,textFontScale,textColor,textThickness)
 
                 i = self.dic["ch8"] #lidar
-                ch8 = row[i]
-                cv2.putText(img, str(ch8),(0,59),textFontFace,textFontScale,textColor,textThickness)
+                lidar = row[i]
+                cv2.putText(img, lidar,(0,59),textFontFace,textFontScale,textColor,textThickness)
 
-                i = self.dic["d1"] #throttle_scale
-                throttle_scale = float(row[i])
-                cv2.putText(img,str(round(throttle_scale,1)),(0,19),textFontFace,textFontScale,textColor,textThickness)
+                i = self.dic["throttle_scale"]
+                throttle_scale = "{:.2f}".format(float(row[i]))
+                cv2.putText(img, throttle_scale,(0,19),textFontFace,textFontScale,textColor,textThickness)
 
                 #try:
                 #    i = 2+2+3+2+4+9

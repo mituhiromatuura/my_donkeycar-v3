@@ -72,17 +72,17 @@ class PiGPIO_PWM():
     def __del__(self):
         self.pgio.stop()
 
-    def set_pulse(self, pulse, trim):
+    def set_pulse(self, pulse, trim1):
         if self.inverted:
           pulse = 2 * self.center - pulse
-        pulse += trim * 10
+        pulse += trim1 * 10
         try:
           self.pgio.hardware_PWM(self.pin, self.freq, int(pulse * self.freq))
         except:
           pass
 
-    def run(self, pulse, trim):
-        self.set_pulse(pulse, trim)
+    def run(self, pulse, trim1):
+        self.set_pulse(pulse, trim1)
 
 
 class PiGPIO_SWPWM():
@@ -102,17 +102,17 @@ class PiGPIO_SWPWM():
     def __del__(self):
         self.pgio.stop()
 
-    def set_pulse(self, pulse, trim):
+    def set_pulse(self, pulse, trim2):
         if self.inverted:
           pulse = 2 * self.center - pulse
-        pulse += trim * 10
+        pulse += trim2 * 10
         try:
           self.pgio.set_PWM_dutycycle(self.pin, pulse)
         except:
           pass
 
-    def run(self, pulse, trim):
-        self.set_pulse(pulse, trim)
+    def run(self, pulse, trim2):
+        self.set_pulse(pulse, trim2)
 
 
 class JHat:
@@ -233,9 +233,9 @@ class PWMSteering:
                                         self.LEFT_ANGLE, self.RIGHT_ANGLE,
                                         self.left_pulse, self.right_pulse)
 
-    def run(self, angle, trim):
+    def run(self, angle, trim3):
         self.run_threaded(angle)
-        self.controller.set_pulse(self.pulse, trim)
+        self.controller.set_pulse(self.pulse, trim3)
 
     def shutdown(self):
         # set steering straight
@@ -293,9 +293,9 @@ class PWMThrottle:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
                                             self.min_pulse, self.zero_pulse)
 
-    def run(self, throttle, trim):
+    def run(self, throttle, trim4):
         self.run_threaded(throttle)
-        self.controller.set_pulse(self.pulse, trim)
+        self.controller.set_pulse(self.pulse, trim4)
 
     def shutdown(self):
         # stop vehicle

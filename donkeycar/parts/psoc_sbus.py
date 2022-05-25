@@ -133,6 +133,8 @@ class PsocCounter:
 		rpm = 0
 		if self.ch0 != 0:
 			rpm = 60 * 1000000 // self.ch0
+			if rpm > self.cfg.REV_RPM_MAX:
+				rpm = 0
 		return \
 			float((self.ch1 - self.ch1center)/((self.ch1max - self.ch1min) / 2)), \
 			float((self.ch2 - self.ch2center)/((self.ch2max - self.ch2min) / 2)), \

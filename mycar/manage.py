@@ -164,13 +164,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'throttle_scale_x',
                 'ai_throttle_mult_x',
                 'auto_throttle_off',
-                'dist_slow',
-                'dist_stop',
-                'dist_throttle_off',
                 'disp_on',
                 'esc_on',
-                'sw_l3',
-                'sw_r3',
                 'VTXPower_value'
                 ],
             threaded=True)
@@ -191,9 +186,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 def run(self, sbus):
                     return round((self.offset + sbus) * self.x, 2)
 
+            V.add(SBus2Percent(  0, cfg.KMPH), inputs=['ch0'], outputs=['kmph'])
             V.add(SBus2Percent(100, 0.01), inputs=['ch3'], outputs=['throttle_scale'])
             V.add(SBus2Percent(100, 0.01), inputs=['ch4'], outputs=['ai_throttle_mult'])
-            V.add(SBus2Percent(100, 1   ), inputs=['ch5'], outputs=['lidarlite'])
+            V.add(SBus2Percent(100, 1   ), inputs=['ch5'], outputs=['stop_range'])
             V.add(SBus2Percent(  0, 1   ), inputs=['ch6'], outputs=['gyro_gain'])
         else:
             from donkeycar.parts.psoc_counter import PsocCounter
@@ -600,7 +596,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                     pilot_angle, pilot_throttle,
                     throttle_scale,
                     ai_throttle_mult,
-                    lidarlite,
+                    stop_range,
                     ch8):
 
             if mode == 'user':
@@ -625,8 +621,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 if user_throttle > throttle_scale * 0.5:
                     return pilot_angle, -0.5
 
-                if lidarlite != 0:
-                    if lidarlite > ch8:
+                if stop_range != 0:
+                    if stop_range > ch8:
                         pilot_throttle = -0.5
 
                 pilot_throttle *= throttle_scale * ai_throttle_mult
@@ -637,7 +633,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                   'pilot/angle', 'pilot/throttle',
                   'throttle_scale',
                   'ai_throttle_mult',
-                  'lidarlite',
+                  'stop_range',
                   'ch8'],
           outputs=['angle', 'throttle'])
 
@@ -652,35 +648,35 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             self.throttle_scale = 201
             self.ai_throttle_mult = 201
             self.gyro_gain = 201
-            self.lidarlite = 201
+            self.stop_range = 201
 
-            self.q_rfcomm.put("ESC:"+ ("ON" if self.esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
-            self.q_rfcomm.put("REC:"+ ("ON" if self.recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+            self.q_rfcomm.put("ESC_"+ ("ON" if self.esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
+            self.q_rfcomm.put("REC_"+ ("ON" if self.recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
 
             self.sec = time.time()
 
-        def run(self, esc_on, recording, mode, throttle_scale, ai_throttle_mult, gyro_gain, lidarlite, volt_a, volt_b):
+        def run(self, esc_on, recording, mode, throttle_scale, ai_throttle_mult, gyro_gain, stop_range, volt_a, volt_b):
             if self.mode != mode:
                 self.mode = mode
-                self.q_rfcomm.put(self.mode[0:7] + " 110,0,130,60,3\n")
+                self.q_rfcomm.put(self.mode + " 15,0,240-15,30,3\n")
             if self.throttle_scale != throttle_scale:
                 self.throttle_scale = throttle_scale
-                self.q_rfcomm.put(str(self.throttle_scale) + " 15," + str(30*0) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.throttle_scale) + " 15," + str(30*1) +",95,30,3\n")
             if self.ai_throttle_mult != ai_throttle_mult:
                 self.ai_throttle_mult = ai_throttle_mult
-                self.q_rfcomm.put(str(self.ai_throttle_mult) + " 15," + str(30*1) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.ai_throttle_mult) + " 15," + str(30*2) +",95,30,3\n")
             if self.gyro_gain != gyro_gain:
                 self.gyro_gain = gyro_gain
-                self.q_rfcomm.put(str(self.gyro_gain) + " 15," + str(30*2) +",95,30,3\n")
-            if self.lidarlite != lidarlite:
-                self.lidarlite = lidarlite
-                self.q_rfcomm.put(str(self.lidarlite) + " 15," + str(30*3) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.gyro_gain) + " 15," + str(30*3) +",95,30,3\n")
+            if self.stop_range != stop_range:
+                self.stop_range = stop_range
+                self.q_rfcomm.put(str(self.stop_range) + " 15," + str(30*4) +",95,30,3\n")
             if self.esc_on != esc_on:
                 self.esc_on = esc_on
-                self.q_rfcomm.put("ESC:"+ ("ON" if esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
+                self.q_rfcomm.put("ESC_"+ ("ON" if esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
             if self.recording != recording:
                 self.recording = recording
-                self.q_rfcomm.put("REC:"+ ("ON" if recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+                self.q_rfcomm.put("REC_"+ ("ON" if recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
 
             if time.time() - self.sec > 1:
                 self.sec = time.time()
@@ -689,7 +685,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
 
     if cfg.USE_RFCOMM:
-        V.add(V2Esp32(q_rfcomm), inputs=['esc_on', 'recording', 'user/mode', 'throttle_scale', 'ai_throttle_mult', 'gyro_gain', 'lidarlite', 'volt_a', 'volt_b'])
+        V.add(V2Esp32(q_rfcomm), inputs=['esc_on', 'recording', 'user/mode', 'throttle_scale', 'ai_throttle_mult', 'gyro_gain', 'stop_range', 'volt_a', 'volt_b'])
 
 
     '''
@@ -901,6 +897,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'angle',
                 'throttle',
                 'lap',
+                'kmph',
                 'rpm',
                 'ch0',
                 'ch1',
@@ -929,31 +926,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'imu/q_3',
                 'volt_a',
                 'volt_b',
-                'dist0',
-                'dist1',
-                'dist2',
-                'dist3',
-                'dist4',
-                'dist5',
-                'dist6',
-                'dist7',
-                'pwmcount',
                 'recording',
                 'auto_record_on_throttle',
                 'constant_throttle',
                 'throttle_scale',
                 'ai_throttle_mult',
                 'gyro_gain',
-                #'auto_throttle_off',
-                'lidarlite',
-                'dist_slow',
-                'dist_stop',
-                'dist_throttle_off',
+                'stop_range',
                 'disp_on',
                 'esc_on',
-                'sw_l3',
-                'sw_r3',
-                'stop',
                 'tub/num_records',
                 'period_time'
             ],
@@ -980,6 +961,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'pilot/angle',
                 'pilot/throttle',
                 'lap',
+                'kmph',
                 'rpm',
                 'ch0',
                 'ch1',
@@ -1014,20 +996,10 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 'imu/q_1',
                 'imu/q_2',
                 'imu/q_3',
-                'dist0',
-                #'dist1',
-                #'dist2',
-                #'dist3',
                 'throttle_scale',
                 'ai_throttle_mult',
-                'auto_throttle_off',
-                'dist4',
-                #'dist5',
-                #'dist6',
-                #'dist7'
-                'dist_slow',
-                'dist_stop',
-                'dist_throttle_off'
+                'gyro_gain',
+                'stop_range',
             ])
 
     #run the vehicle for 20 seconds

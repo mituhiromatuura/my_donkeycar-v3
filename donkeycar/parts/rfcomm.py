@@ -21,6 +21,7 @@ class RfComm:
 			self.bt = open(self.dev_rc, 'w')
 			print(self.dev_rc, "w open")
 
+			self.bt.write("BZ 2,500,500,0,0\n")
 			self.bt.write("' 0,0,240,320,1\n")
 
 			host = socket.gethostname()
@@ -61,6 +62,8 @@ class RfComm:
 		return
 
 	def shutdown(self):
+		self.bt.write("BYE 0,0,240,320,8\n")
+		self.bt.write("BZ 3,250,250,0,0\n")
 		subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 		self.on = False
 
