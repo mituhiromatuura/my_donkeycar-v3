@@ -227,14 +227,14 @@ class PWMSteering:
         while self.running:
             self.controller.set_pulse(self.pulse)
 
-    def run_threaded(self, angle):
+    def run_threaded(self, angle, ep):
         # map absolute angle to angle that vehicle can implement.
         self.pulse = dk.utils.map_range(angle,
                                         self.LEFT_ANGLE, self.RIGHT_ANGLE,
-                                        self.left_pulse, self.right_pulse)
+                                        self.left_pulse + ep, self.right_pulse - ep)
 
-    def run(self, angle, trim3):
-        self.run_threaded(angle)
+    def run(self, angle, trim3, ep):
+        self.run_threaded(angle, ep)
         self.controller.set_pulse(self.pulse, trim3)
 
     def shutdown(self):
@@ -268,33 +268,20 @@ class PWMThrottle:
         self.zero_pulse = zero_pulse
         self.pulse = zero_pulse
 
-        '''
-        # send zero pulse to calibrate ESC
-        print("Init ESC")
-        self.controller.set_pulse(self.max_pulse)
-        time.sleep(0.01)
-        self.controller.set_pulse(self.min_pulse)
-        time.sleep(0.01)
-        self.controller.set_pulse(self.zero_pulse)
-        time.sleep(1)
-        self.running = True
-        print('PWM Throttle created')
-        '''
-
     def update(self):
         while self.running:
             self.controller.set_pulse(self.pulse)
 
-    def run_threaded(self, throttle):
+    def run_threaded(self, throttle, ep):
         if throttle > 0 and throttle < 1.0:
             self.pulse = dk.utils.map_range(throttle, 0, self.MAX_THROTTLE,
-                                            self.zero_pulse, self.max_pulse)
+                                            self.zero_pulse + ep, self.max_pulse - ep)
         elif throttle > -1.0:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
-                                            self.min_pulse, self.zero_pulse)
+                                            self.min_pulse + ep, self.zero_pulse - ep)
 
-    def run(self, throttle, trim4):
-        self.run_threaded(throttle)
+    def run(self, throttle, trim4, ep):
+        self.run_threaded(throttle, ep)
         self.controller.set_pulse(self.pulse, trim4)
 
     def shutdown(self):

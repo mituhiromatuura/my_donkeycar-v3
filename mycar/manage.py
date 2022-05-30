@@ -186,7 +186,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 def run(self, sbus):
                     return round((self.offset + sbus) * self.x, 2)
 
-            V.add(SBus2Percent(  0, cfg.KMPH), inputs=['ch0'], outputs=['kmph'])
+            V.add(SBus2Percent(  0, cfg.KMPH), inputs=['rpm'], outputs=['kmph'])
             V.add(SBus2Percent(100, 0.01), inputs=['ch3'], outputs=['throttle_scale'])
             V.add(SBus2Percent(100, 0.01), inputs=['ch4'], outputs=['ai_throttle_mult'])
             V.add(SBus2Percent(100, 1   ), inputs=['ch5'], outputs=['stop_range'])
@@ -805,15 +805,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                                             max_pulse=cfg.THROTTLE_FORWARD_PWM,
                                             zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        V.add(steering, inputs=['angle', 'ch9'])
-        V.add(throttle, inputs=['throttle', 'ch10'])
+        V.add(steering, inputs=['angle', 'ch9', 'ch11'])
+        V.add(throttle, inputs=['throttle', 'ch10', 'ch12'])
     
         lidar_controller = PiGPIO_SWPWM(cfg.LIDAR_PWM_PIN, freq=cfg.LIDAR_PWM_FREQ, inverted=cfg.LIDAR_PWM_INVERTED,
                                       center=cfg.LIDAR_CENTER_PWM)
         lidar = PWMSteering(controller=lidar_controller,
                                         left_pulse=cfg.LIDAR_RIGHT_PWM, 
                                         right_pulse=cfg.LIDAR_LEFT_PWM)
-        V.add(lidar, inputs=['angle', 'ch13'])
+        V.add(lidar, inputs=['angle', 'ch13', 'ch15'])
 
     elif cfg.DRIVE_TRAIN_TYPE == "PSOC_I2C_PWM":
         from donkeycar.parts.actuator_psoc import PsocI2cPwm
