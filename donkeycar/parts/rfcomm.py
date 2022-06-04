@@ -47,6 +47,8 @@ class RfComm:
 			threading.Thread(target=self.bt_rx).start()
 		except:
 			print(self.dev_rc, "none")
+			self.bt.close()
+			subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 			self.on = False
 
 	def update(self):
@@ -56,6 +58,8 @@ class RfComm:
 				self.bt.write(s)
 		except:
 			print(self.dev_rc, "none(tx)")
+			self.bt.close()
+			subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 			self.on = False
 
 	def run_threaded(self):
@@ -64,6 +68,7 @@ class RfComm:
 	def shutdown(self):
 		self.bt.write("BYE 0,0,240,320,8\n")
 		self.bt.write("BZ 3,250,250,0,0\n")
+		self.bt.close()
 		subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 		self.on = False
 

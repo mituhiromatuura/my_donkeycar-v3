@@ -39,12 +39,14 @@ fi
 if [ $1 = "0" ] || [ $1 = "d" ] || [ $1 = "a" ]; then
 
   LAST=$(</dev/shm/date.txt)
-  echo "$LAST"
-  NOW=`date "+%s"`
-  echo "$NOW"
-  if (( "$LAST" + 10 > "$NOW" )); then
-    exit
-  fi
+  while true; do
+    NOW=`date "+%s"`
+    if (( "$LAST" + 10 < "$NOW" )); then
+      break
+    fi
+    echo $(("$LAST" - "$NOW" + 10))
+    sleep 1
+  done
 
   rm -r $MYCAR/
   mkdir $MYCAR

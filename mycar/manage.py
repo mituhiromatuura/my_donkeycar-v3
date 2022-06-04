@@ -613,10 +613,12 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 pilot_angle = pilot_angle if pilot_angle else 0.0
                 pilot_throttle = pilot_throttle if pilot_throttle else 0.0
 
+                '''
                 if abs(self.angle - pilot_angle) < 0.3:
                     self.angle = pilot_angle
                 else:
                     pilot_angle = self.angle
+                '''
 
                 if user_throttle > throttle_scale * 0.5:
                     return pilot_angle, -0.5
@@ -658,7 +660,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         def run(self, esc_on, recording, mode, throttle_scale, ai_throttle_mult, gyro_gain, stop_range, volt_a, volt_b):
             if self.mode != mode:
                 self.mode = mode
-                self.q_rfcomm.put(self.mode + " 15,0,240-15,30,3\n")
+                self.q_rfcomm.put(self.mode + " 15,0," + str(240-15) +",30,3\n")
             if self.throttle_scale != throttle_scale:
                 self.throttle_scale = throttle_scale
                 self.q_rfcomm.put(str(self.throttle_scale) + " 15," + str(30*1) +",95,30,3\n")
