@@ -21,12 +21,12 @@ class RfComm:
 			self.bt = open(self.dev_rc, 'w')
 			print(self.dev_rc, "w open")
 
-			self.bt.write("BZ 2,500,500,0,0\n")
-			self.bt.write("' 0,0,240,320,1\n")
+			self.bt.write("\x1c 2,500,500\n")
+			self.bt.write("\x12 0\n")
 
 			host = socket.gethostname()
 			print(host)
-			self.bt.write("HOSTNAME:" + host + ".local 0,260,240,20,2\n")
+			self.bt.write("HOSTNAME:" + host + ".local 80,180,0,0,2\n")
 
 			tmp = subprocess.check_output("wpa_cli -i wlan0 status", shell=True).decode()
 			idx = tmp.find("bssid=")
@@ -34,7 +34,7 @@ class RfComm:
 			idx1 = tmp.find("\n", idx0)
 			ssid = tmp[idx0 + 5:idx1]
 			print(ssid)
-			self.bt.write("SSID:" + ssid + " 0,280,240,20,2\n")
+			self.bt.write("SSID:" + ssid + " 80,200,0,0,2\n")
 
 			ifconfig = subprocess.check_output("ifconfig", shell=True).decode()
 			idx = ifconfig.find("wlan0: ")
@@ -42,12 +42,12 @@ class RfComm:
 			idx1 = ifconfig.find("  ", idx0)
 			ip = ifconfig[idx0 + 5:idx1]
 			print(ip)
-			self.bt.write("IP:" + ip + " 0,300,240,20,2\n")
+			self.bt.write("IP:" + ip + " 80,220,0,0,2\n")
 
 			threading.Thread(target=self.bt_rx).start()
 		except:
 			print(self.dev_rc, "none")
-			self.bt.close()
+			#self.bt.close()
 			subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 			self.on = False
 
@@ -66,8 +66,9 @@ class RfComm:
 		return
 
 	def shutdown(self):
-		self.bt.write("BYE 0,0,240,320,8\n")
-		self.bt.write("BZ 3,250,250,0,0\n")
+		self.bt.write("\x1c 3,250,250\n")
+		self.bt.write("\x12 0\n")
+		self.bt.write("BYE 0,0,0,0,8\n")
 		self.bt.close()
 		subprocess.call("sudo rfcomm release 0 " + self.tmp.strip() + " 1 &", shell=True)
 		self.on = False

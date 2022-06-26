@@ -652,38 +652,38 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             self.gyro_gain = 201
             self.stop_range = 201
 
-            self.q_rfcomm.put("ESC_"+ ("ON" if self.esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
-            self.q_rfcomm.put("REC_"+ ("ON" if self.recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+            self.q_rfcomm.put("ESC_"+ ("ON" if self.esc_on else "OFF") +" 80," + str(30*1) +",130,30,3\n")
+            self.q_rfcomm.put("REC_"+ ("ON" if self.recording else "OFF") +" 80," + str(30*2) +",130,30,3\n")
 
             self.sec = time.time()
 
         def run(self, esc_on, recording, mode, throttle_scale, ai_throttle_mult, gyro_gain, stop_range, volt_a, volt_b):
             if self.mode != mode:
                 self.mode = mode
-                self.q_rfcomm.put(self.mode + " 15,0," + str(240-15) +",30,3\n")
+                self.q_rfcomm.put(self.mode + " 0,0," + str(240-15) +",30,3\n")
             if self.throttle_scale != throttle_scale:
                 self.throttle_scale = throttle_scale
-                self.q_rfcomm.put(str(self.throttle_scale) + " 15," + str(30*1) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.throttle_scale) + " 0," + str(30*1) +",80,30,3\n")
             if self.ai_throttle_mult != ai_throttle_mult:
                 self.ai_throttle_mult = ai_throttle_mult
-                self.q_rfcomm.put(str(self.ai_throttle_mult) + " 15," + str(30*2) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.ai_throttle_mult) + " 0," + str(30*2) +",80,30,3\n")
             if self.gyro_gain != gyro_gain:
                 self.gyro_gain = gyro_gain
-                self.q_rfcomm.put(str(self.gyro_gain) + " 15," + str(30*3) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.gyro_gain) + " 0," + str(30*3) +",80,30,3\n")
             if self.stop_range != stop_range:
                 self.stop_range = stop_range
-                self.q_rfcomm.put(str(self.stop_range) + " 15," + str(30*4) +",95,30,3\n")
+                self.q_rfcomm.put(str(self.stop_range) + " 0," + str(30*4) +",80,30,3\n")
             if self.esc_on != esc_on:
                 self.esc_on = esc_on
-                self.q_rfcomm.put("ESC_"+ ("ON" if esc_on else "OFF") +" 110," + str(30*2) +",130,30,3\n")
+                self.q_rfcomm.put("ESC_"+ ("ON" if esc_on else "OFF") +" 80," + str(30*1) +",130,30,3\n")
             if self.recording != recording:
                 self.recording = recording
-                self.q_rfcomm.put("REC_"+ ("ON" if recording else "OFF") +" 110," + str(30*4) +",130,30,3\n")
+                self.q_rfcomm.put("REC_"+ ("ON" if recording else "OFF") +" 80," + str(30*2) +",130,30,3\n")
 
             if time.time() - self.sec > 1:
                 self.sec = time.time()
-                self.q_rfcomm.put(str(round(volt_b,2)) + " 15," + str(30*6) +",95,30,3\n")
-                self.q_rfcomm.put(str(round(volt_a,2)) + " 15," + str(30*7) +",95,30,3\n")
+                self.q_rfcomm.put(str(round(volt_b,2)) + " 0," + str(30*6) +",80,30,3\n")
+                self.q_rfcomm.put(str(round(volt_a,2)) + " 0," + str(30*7) +",80,30,3\n")
 
 
     if cfg.USE_RFCOMM:

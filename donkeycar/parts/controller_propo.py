@@ -631,21 +631,21 @@ class TTUJoystickController(JoystickController):
             if (d[0] == 99):
                 if(d[1] == 'P'):
                     self.esc_sw_off()
-                    #self.q_rfcomm.put("ESC:OFF 110,60,130,60,3\n")
+                    #self.q_rfcomm.put("ESC:OFF 80,30,130,30,3\n")
                 elif(d[1] == 'p'):
                     self.esc_sw_on()
-                    #self.q_rfcomm.put("ESC:ON 110,60,130,60,3\n")
+                    #self.q_rfcomm.put("ESC:ON 80,30,130,30,3\n")
                 elif(d[1] == 'R'):
                     self.auto_record_on_throttle = False
                     self.recording = False
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
-                    #self.q_rfcomm.put("REC:OFF 110,120,130,60,3\n")
+                    #self.q_rfcomm.put("REC:OFF 80,60,130,30,3\n")
                 elif(d[1] == 'r'):
                     self.auto_record_on_throttle = True
                     #self.recording = False
                     self.recording = True
                     print('auto_record_on_throttle:', self.auto_record_on_throttle)
-                    #self.q_rfcomm.put("REC:ON 110,120,130,60,3\n")
+                    #self.q_rfcomm.put("REC:ON 80,60,130,30,3\n")
                 elif(d[1] == 'u'):
                     self.mode = 'user'
                     #self.q_rfcomm.put("MODE:" + self.mode)
