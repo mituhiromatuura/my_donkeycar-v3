@@ -438,17 +438,22 @@ class Tub(object):
         return train_gen, val_gen
 
 
-import RPi.GPIO as GPIO
+if os.getenv('USER') == 'pi':
+    import RPi.GPIO as GPIO
 
 class TubWriter(Tub):
     def __init__(self, *args, **kwargs):
         super(TubWriter, self).__init__(*args, **kwargs)
 
         self.enable = True
-        self.pin = 29 #GPIO5
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.pin, GPIO.OUT)
-        GPIO.output(self.pin, GPIO.HIGH)
+        if os.getenv('USER') == 'pi':
+            self.pin = 29 #GPIO5
+            GPIO.setmode(GPIO.BOARD)
+            GPIO.setup(self.pin, GPIO.OUT)
+            GPIO.output(self.pin, GPIO.HIGH)
+            self.pi = True
+        else:
+            self.pi = False
 
     def run(self, *args):
         """
@@ -460,13 +465,16 @@ class TubWriter(Tub):
 
         if self.enable:
             try:
-                GPIO.output(self.pin, GPIO.LOW)
+                if self.pi:
+                    GPIO.output(self.pin, GPIO.LOW)
                 self.put_record(record)
-                GPIO.output(self.pin, GPIO.HIGH)
+                if self.pi:
+                    GPIO.output(self.pin, GPIO.HIGH)
             except:
                 print("TubWriter : except")
                 self.enable = False
-                GPIO.output(self.pin, GPIO.HIGH)
+                if self.pi:
+                    GPIO.output(self.pin, GPIO.HIGH)
 
         return self.current_ix
 
