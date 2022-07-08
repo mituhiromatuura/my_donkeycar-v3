@@ -61,6 +61,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     #Initialize car
     V = dk.vehicle.Vehicle()
 
+    from donkeycar.parts.cycle_time import CycleTime
+    V.add(CycleTime(cfg), inputs=['user/mode'], outputs=['cycle_time'])
+
     print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
     if camera_type == "stereo":
 
@@ -138,35 +141,68 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         #modify max_throttle closer to 1.0 to have more power
         #modify steering_scale lower than 1.0 to have less responsive steering
-        if cfg.CONTROLLER_TYPE == "MM1":
-            from donkeycar.parts.robohat import RoboHATController            
-            ctr = RoboHATController(cfg)
-        elif "custom" == cfg.CONTROLLER_TYPE:
-            #
-            # custom controller created with `donkey createjs` command
-            #
-            from my_joystick import MyJoystickController
-            ctr = MyJoystickController(
-                throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
-                throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
-                steering_scale=cfg.JOYSTICK_STEERING_SCALE,
-                auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
-            ctr.set_deadzone(cfg.JOYSTICK_DEADZONE)
+        if cfg.CONTROLLER_TYPE == "HID16CH":
+            from donkeycar.parts.controller_sbus import SbusHid16ch
+            ctr = SbusHid16ch(cfg)
+            V.add(
+                ctr,
+                outputs=[
+                    'user/angle',
+                    'user/throttle',
+                    'user/mode',
+                    'recording',
+                    'esc_on',
+                    'disp_on',
+                    'rpm',
+                    'ch0',
+                    'ch1',
+                    'ch2',
+                    'ch3',
+                    'ch4',
+                    'ch5',
+                    'ch6',
+                    'ch7',
+                    'lidar',
+                    'ch11',
+                    'ch12',
+                    'ch13',
+                    'ch14',
+                    'ch21',
+                    'ch22',
+                    'ch23',
+                    'ch24',
+                ],
+                threaded=True)
         else:
-            from donkeycar.parts.controller import get_js_controller
+            if cfg.CONTROLLER_TYPE == "MM1":
+                from donkeycar.parts.robohat import RoboHATController            
+                ctr = RoboHATController(cfg)
+            elif "custom" == cfg.CONTROLLER_TYPE:
+                #
+                # custom controller created with `donkey createjs` command
+                #
+                from my_joystick import MyJoystickController
+                ctr = MyJoystickController(
+                    throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
+                    throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
+                    steering_scale=cfg.JOYSTICK_STEERING_SCALE,
+                    auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
+                ctr.set_deadzone(cfg.JOYSTICK_DEADZONE)
+            else:
+                from donkeycar.parts.controller import get_js_controller
 
-            ctr = get_js_controller(cfg)
+                ctr = get_js_controller(cfg)
 
-            if cfg.USE_NETWORKED_JS:
-                from donkeycar.parts.controller import JoyStickSub
-                netwkJs = JoyStickSub(cfg.NETWORK_JS_SERVER_IP)
-                V.add(netwkJs, threaded=True)
-                ctr.js = netwkJs
-        
-        V.add(ctr, 
-          inputs=['cam/image_array'],
-          outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-          threaded=True)
+                if cfg.USE_NETWORKED_JS:
+                    from donkeycar.parts.controller import JoyStickSub
+                    netwkJs = JoyStickSub(cfg.NETWORK_JS_SERVER_IP)
+                    V.add(netwkJs, threaded=True)
+                    ctr.js = netwkJs
+            
+            V.add(ctr, 
+              inputs=['cam/image_array'],
+              outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+              threaded=True)
 
     else:
         #This web controller will create a web server that is capable
@@ -629,6 +665,110 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
             ctr.set_button_down_trigger('cross', new_tub_dir)
         ctr.print_controls()
+
+    if cfg.HAVE_INA226:
+        from donkeycar.parts.ina226 import Ina226
+        ina226_a = Ina226(0x48)
+        V.add(ina226_a, outputs=['volt_a'], threaded=False)
+        ina226_b = Ina226(0x49)
+        V.add(ina226_b, outputs=['volt_b'], threaded=False)
+
+    if cfg.HAVE_AHRS:
+        from donkeycar.parts.wt901 import Wt901
+        V.add(Wt901('/dev/ttyWt901'), outputs=[
+            'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
+            'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z',
+            'imu/mag_x', 'imu/mag_y', 'imu/mag_z',
+            'imu/angle_x','imu/angle_y','imu/angle_z',
+            'imu/q_0', 'imu/q_1', 'imu/q_2', 'imu/q_3'],
+            threaded=True)
+
+    from donkeycar.parts.fpvdisp import FPVDisp
+    V.add(FPVDisp(cfg),
+        inputs=[
+            'tub/num_records',
+            'cam/image_array',
+            'cycle_time',
+            'volt_a',
+            'volt_b',
+            'user/mode',
+            'angle',
+            'throttle',
+            'rpm',
+            'lap',
+            'lidar',
+            'esc_on',
+            'disp_on',
+            'recording',
+            'ch1',
+            'ch2',
+            'ch3',
+            'ch4',
+            'ch5',
+            'ch6',
+            'imu/gyr_z'
+        ],
+        outputs=[
+            'kmph',
+        ],
+        threaded=False
+    )
+
+    from donkeycar.parts.csvlog import CsvLog
+    V.add(CsvLog(cfg),
+        inputs=[
+            'tub/num_records',
+            'cycle_time',
+            'volt_a',
+            'volt_b',
+            'user/mode',
+            'angle',
+            'throttle',
+            'user/angle',
+            'user/throttle',
+            'pilot/angle',
+            'pilot/throttle',
+            'rpm',
+            'kmph',
+            'lap',
+            'ch3', #'throttle_scale',
+            'ch4', #'ai_throttle_mult',
+            'ch5', #'gyro_gain',
+            'ch6', #'stop_range',
+            'lidar',
+            'imu/acl_x',
+            'imu/acl_y',
+            'imu/acl_z',
+            'imu/gyr_x',
+            'imu/gyr_y',
+            'imu/gyr_z',
+            'imu/mag_x',
+            'imu/mag_y',
+            'imu/mag_z',
+            'imu/angle_x',
+            'imu/angle_y',
+            'imu/angle_z',
+            'imu/q_0',
+            'imu/q_1',
+            'imu/q_2',
+            'imu/q_3',
+            'ch0',
+            'ch1',
+            'ch2',
+            'ch3',
+            'ch4',
+            'ch5',
+            'ch6',
+            'ch7',
+            'ch11',
+            'ch12',
+            'ch13',
+            'ch14',
+            'ch21',
+            'ch22',
+            'ch23',
+            'ch24',
+        ])
 
     #run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,

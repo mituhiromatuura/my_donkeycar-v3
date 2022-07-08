@@ -433,9 +433,21 @@ class Tub(object):
         return train_gen, val_gen
 
 
+if os.getenv('USER') == 'pi':
+    import RPi.GPIO as GPIO
+
 class TubWriter(Tub):
     def __init__(self, *args, **kwargs):
         super(TubWriter, self).__init__(*args, **kwargs)
+
+        if os.getenv('USER') == 'pi':
+            self.pin = 5
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.pin, GPIO.OUT)
+            GPIO.output(self.pin, GPIO.HIGH)
+            self.pi = True
+        else:
+            self.pi = False
 
     def run(self, *args):
         """
@@ -444,7 +456,11 @@ class TubWriter(Tub):
         """
         assert len(self.inputs) == len(args)
         record = dict(zip(self.inputs, args))
+        if self.pi:
+            GPIO.output(self.pin, GPIO.LOW)
         self.put_record(record)
+        if self.pi:
+            GPIO.output(self.pin, GPIO.HIGH)
         return self.current_ix
 
 
