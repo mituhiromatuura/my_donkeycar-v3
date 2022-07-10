@@ -34,6 +34,10 @@ from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
 
+import queue
+q_button = queue.Queue()
+q_rfcomm = queue.Queue()
+
 def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type='single', meta=[]):
     '''
     Construct a working robotic vehicle from many parts.
@@ -214,9 +218,11 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
           threaded=True)
 
+    '''
     #this throttle filter will allow one tap back for esc reverse
     th_filter = ThrottleFilter()
     V.add(th_filter, inputs=['user/throttle'], outputs=['user/throttle'])
+    '''
 
     #See if we should even run the pilot module.
     #This is only needed because the part run_condition only accepts boolean
@@ -284,6 +290,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 col = color
         return col
 
+    '''
     class RecordTracker:
         def __init__(self):
             self.last_num_rec_print = 0
@@ -314,6 +321,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     rec_tracker_part = RecordTracker()
     V.add(rec_tracker_part, inputs=["tub/num_records"], outputs=['records/alert'])
+    '''
 
     if cfg.AUTO_RECORD_ON_THROTTLE and isinstance(ctr, JoystickController):
         #then we are not using the circle button. hijack that to force a record count indication
@@ -512,6 +520,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         def run(self, mode, recording):
             if mode == 'user':
                 return recording
+            if mode == 'local_angle':
+                return False
             return True
 
     if cfg.RECORD_DURING_AI:
@@ -695,7 +705,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             'angle',
             'throttle',
             'rpm',
-            'lap',
             'lidar',
             'esc_on',
             'disp_on',
@@ -710,9 +719,27 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         ],
         outputs=[
             'kmph',
+            'lap',
         ],
         threaded=False
     )
+
+    if cfg.USE_RFCOMM:
+        from donkeycar.parts.rfcomm import RfComm
+        V.add(RfComm(cfg, q_rfcomm, q_button), inputs=[
+            'user/mode',
+            'esc_on',
+            'recording',
+            'ch3',
+            'ch4',
+            'ch5',
+            'ch6',
+            'tub/num_records',
+            'lap',
+            'volt_a',
+            'volt_b',
+            ],
+            threaded=False)
 
     from donkeycar.parts.csvlog import CsvLog
     V.add(CsvLog(cfg),

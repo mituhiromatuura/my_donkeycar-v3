@@ -72,9 +72,44 @@ class MakeMovie(object):
                 self.do_salient = self.init_salient(self.keras_part.model)
 
         print('making movie', args.out, 'from', num_frames, 'images')
-        clip = mpy.VideoClip(self.make_frame,
-                             duration=((num_frames - 1) / self.cfg.DRIVE_LOOP_HZ))
-        clip.write_videofile(args.out, fps=self.cfg.DRIVE_LOOP_HZ)
+
+        import csv
+        try:
+            f = open('/run/shm/mycar/data/log.csv','r')
+            self.csv = [row for row in csv.reader(f)]
+            self.csv_file = True
+
+            row = self.csv[0]
+            n = 0
+            self.dic = {}
+            for d in row:
+                self.dic[row[n]] = n
+                n += 1
+        except:
+            self.csv_file = False
+
+        if self.csv_file == False:
+            clip = mpy.VideoClip(self.make_frame,
+                                 duration=((num_frames - 1) / self.cfg.DRIVE_LOOP_HZ))
+            clip.write_videofile(args.out, fps=self.cfg.DRIVE_LOOP_HZ)
+        else:
+            '''
+            i = self.dic["ms"]
+            duration = 0
+            for d in self.csv:
+                row = self.csv[n]
+                duration += float(row[i])
+            duration /= 1000
+            print('duration = ', duration)
+            '''
+            record_start = self.tub.get_record(self.index[start])
+            record_last = self.tub.get_record(self.index[self.end])
+            duration = (int(record_last["milliseconds"]) - int(record_start["milliseconds"])) / 1000
+            print('duration = ', duration)
+
+            clip = mpy.VideoClip(self.make_frame,
+                                 duration=duration)
+            clip.write_videofile(args.out, fps=(num_frames - 1) / duration)
 
     def draw_user_input(self, record, img):
         '''
@@ -86,8 +121,18 @@ class MakeMovie(object):
         user_angle = float(record["user/angle"])
         user_throttle = float(record["user/throttle"])
 
+        try:
+            if record["user/mode"] == "local_angle":
+                user_angle = float(record["pilot/angle"])
+            elif record["user/mode"] == "local":
+                user_angle = float(record["pilot/angle"])
+                user_throttle = float(record["pilot/throttle"])
+        except:
+            pass
+
         height, width, _ = img.shape
 
+        '''
         length = height
         a1 = user_angle * 45.0
         l1 = user_throttle * length
@@ -97,9 +142,83 @@ class MakeMovie(object):
         p1 = tuple((mid - 2, height - 1))
         p11 = tuple((int(p1[0] + l1 * math.cos((a1 + 270.0) * self.deg_to_rad)),
                      int(p1[1] + l1 * math.sin((a1 + 270.0) * self.deg_to_rad))))
+        '''
+        user_angle *= self.cfg.CONTROLLER_ANGLE_NR
+        user_throttle *= self.cfg.CONTROLLER_THROTTLE_NR
+        p1 = tuple((int(round(width/2)), int(round(height))))
+        p11 = tuple((int(round(width/2 + width/2 * user_angle)),
+                    int(round(height + height * user_throttle))))
 
         # user is green, pilot is blue
         cv2.line(img, p1, p11, (0, 255, 0), 2)
+
+        def printText(img, str, xy, textColor=(0,255,0)):
+            textFontFace = cv2.FONT_HERSHEY_SIMPLEX
+            textFontScale = 0.4
+            textThickness = 1
+            cv2.putText(img, str, xy, textFontFace,textFontScale,textColor,textThickness)
+
+        printText(img, record["user/mode"], (0,9))
+        printText(img, str(self.iRec), (120,9))
+
+        if self.csv_file == True:
+            row = self.csv[self.iRec + 1]
+
+            i = self.dic["ms"]
+            cycle_time = float(row[i])
+            printText(img, "{:.1f}".format(cycle_time), (width-8*7//2,height-1))
+
+            if self.cfg.HAVE_INA226:
+                i = self.dic["va"]
+                volt_a = "{:.2f}".format(float(row[i]))
+                printText(img, volt_a, (0,height-1))
+                i = self.dic["vb"]
+                volt_b = "{:.2f}".format(float(row[i]))
+                printText(img, volt_b, (0,height-11))
+
+            if self.cfg.HAVE_REVCOUNT:
+                i = self.dic["lap"]
+                lap = row[i]
+                printText(img, lap, (0,height-21))
+
+                i = self.dic["kmph"]
+                kmph = "{:.1f}".format(float(row[i]))
+                printText(img, kmph, (40,height-1))
+
+                i = self.dic["rpm"]
+                rpm = row[i]
+                printText(img, rpm, (90,height-1))
+
+            try:
+                i = self.dic["gyro_gain"]
+                gyro_gain = row[i]
+                printText(img, gyro_gain, (0,39))
+            except:
+                pass
+
+            try:
+                i = self.dic["ai_throttle_mult"]
+                ai_throttle_mult = "{:.2f}".format(float(row[i]))
+                printText(img, ai_throttle_mult, (0,29))
+            except:
+                pass
+
+            if self.cfg.HAVE_LIDAR:
+                i = self.dic["stop_range"]
+                stop_range = row[i]
+                printText(img, stop_range,(0,49))
+
+                i = self.dic["lidar"]
+                lidar = row[i]
+                printText(img, lidar,(0,59))
+
+            try:
+                i = self.dic["throttle_scale"]
+                throttle_scale = "{:.2f}".format(float(row[i]))
+                printText(img, throttle_scale,(0,19))
+            except:
+                pass
+
         
     def draw_model_prediction(self, record, img):
         '''

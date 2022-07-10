@@ -500,10 +500,13 @@ class TubHandler:
         return next_number
 
     def create_tub_path(self):
+        '''
         tub_num = self.next_tub_number(self.path)
         date = datetime.datetime.now().strftime('%y-%m-%d')
         name = '_'.join(['tub', str(tub_num), date])
         tub_path = os.path.join(self.path, name)
+        '''
+        tub_path = os.path.join(self.path, 'tub')
         return tub_path
 
     def new_tub_writer(self, inputs, types, user_meta=[]):

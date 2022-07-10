@@ -19,13 +19,6 @@ if [ -e $DOUBLE ]; then
 fi
 echo -n > $DOUBLE
 
-#hostname="mini2018"
-#hostname="mbp2008"
-hostname="mba2010"
-#ramdisk="RamDisk_1G"
-#ramdisk="RamDisk_2G"
-ramdisk="RamDisk"
-
 MYCAR=/dev/shm/mycar
 TUB=$MYCAR/data/tub*
 LOGS=~/projects/my_donkeycar-v3/mycar/logs
@@ -43,12 +36,12 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ]; then
   vcgencmd measure_clock arm
   vcgencmd measure_temp
 
-  if [ "$MYCONFIG" != "" ]; then
-    MYCONFIG="--myconfig "$MYCONFIG
+  if [ ! -e "/dev/rfcomm0" ]; then
+    sudo rfcomm --raw connect 0 $RFCOMM_MAC 1 &
   fi
 
   if [ "$1" = "0" ] || [ "$1" = "d" ]; then
-    python manage.py drive $MYCONFIG --js
+    python manage.py drive --js
   else
     if [ "$2" = "" ]; then
       if [ $MODEL_FILE != "" ]; then
@@ -63,7 +56,7 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ]; then
     if [ $MODEL_TYPE != "" ]; then
       MODEL_TYPE="--type "$MODEL_TYPE
     fi
-    python manage.py drive $MYCONFIG $MODEL_FILE $MODEL_TYPE --js
+    python manage.py drive $MODEL_FILE $MODEL_TYPE --js
   fi
 
   vcgencmd measure_clock arm
@@ -73,7 +66,7 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ]; then
 fi
 
 if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ]; then
-  read -p "Hit enter: sudo zip"
+  read -p "Hit enter: zip"
 
   cp config.py $MYCAR/
   cp myconfig.py $MYCAR/
@@ -82,29 +75,36 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ]; then
   fi
 
   pushd /dev/shm
-  if [ "$1" != "a" ]; then
-    sudo zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
+  if [ "$1" == "d" ]; then
+    zip -rq $LOGS/log_${ymdhm}_drive.zip mycar
     cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_drive.csv
-  else
-    sudo zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
+  elif [ "$1" == "a" ]; then
+    zip -rq $LOGS/log_${ymdhm}_auto.zip mycar
     cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_auto.csv
+  else
+    zip -rq $LOGS/log_${ymdhm}_.zip mycar
+    cp $MYCAR/data/log.csv $LOGS/log_${ymdhm}_.csv
   fi
   popd
 
   read -p "Hit enter: rsync log.csv"
-  rsync $RSYNC_OPT --delete $MYCAR/data/log.csv work@$hostname.local:/Volumes/$ramdisk/
+  rsync $RSYNC_OPT --delete $MYCAR/data/log.csv $HOSTNAME:$RAMDISK
 fi
 
 if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ] || [ "$1" = "m" ]; then
   read -p "Hit enter: makemovie"
-  if [ "$1" != "a" ]; then
+  if [ "$1" == "d" ]; then
     donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_drive.mp4 --scale 1
     read -p "Hit enter: rsync movie"
-    rsync $RSYNC_OPT $LOGS/log_${ymdhm}_drive.mp4 work@$hostname.local:/Volumes/$ramdisk/
-  else
+    rsync $RSYNC_OPT $LOGS/log_${ymdhm}_drive.mp4 $HOSTNAME:$RAMDISK
+  elif [ "$1" == "a" ]; then
     donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_auto.mp4 --scale 1
     read -p "Hit enter: rsync movie"
-    rsync $RSYNC_OPT $LOGS/log_${ymdhm}_auto.mp4 work@$hostname.local:/Volumes/$ramdisk/
+    rsync $RSYNC_OPT $LOGS/log_${ymdhm}_auto.mp4 $HOSTNAME:$RAMDISK
+  else
+    donkey makemovie --tub $TUB/ --out $LOGS/log_${ymdhm}_.mp4 --scale 1
+    read -p "Hit enter: rsync movie"
+    rsync $RSYNC_OPT $LOGS/log_${ymdhm}_.mp4 $HOSTNAME:$RAMDISK
   fi
 fi
 
@@ -112,7 +112,7 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ] || [ "$1
   read -p "Hit enter: up"
   echo -n "input path: "
   read str
-  time rsync $RSYNC_OPT $MYCAR $HOSTPC_URL:/dev/shm/$str/
+  time rsync $RSYNC_OPT $MYCAR $TRAIN_URL:/dev/shm/$str/
 fi
 
 if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ] || [ "$1" = "m" ] || [ "$1" = "up" ] || [ "$1" = "down" ]; then
@@ -122,7 +122,7 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ] || [ "$1
     echo -n "input path: "
     read str
   fi
-  time rsync $RSYNC_OPT $HOSTPC_URL:/dev/shm/$str/mycar/models ./
+  time rsync $RSYNC_OPT $TRAIN_URL:/dev/shm/$str/mycar/models ./
   cp ./models/mypilot.h5 ./models/mypilot_${ymdhm}.h5
   cp ./models/mypilot.tflite ./models/mypilot_${ymdhm}.tflite
 fi
@@ -135,7 +135,7 @@ if [ "$1" = "s" ]; then
   read END
   time donkey makemovie --type linear --tub $TUB/ --out $LOGS/log_${ymdhm}_salient.mp4 --scale 1 --salient --model ./models/mypilot.h5 --start $START --end $END
   read -p "Hit enter: rsync salient"
-  rsync $RSYNC_OPT $LOGS/log_${ymdhm}_salient.mp4 work@$hostname.local:/Volumes/$ramdisk/
+  rsync $RSYNC_OPT $LOGS/log_${ymdhm}_salient.mp4 $HOSTNAME:$RAMDISK
 fi
 
 rm $DOUBLE

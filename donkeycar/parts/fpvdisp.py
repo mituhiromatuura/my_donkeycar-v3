@@ -12,7 +12,6 @@ class FPVDisp:
 		self.cfg = cfg
 		self.on = True
 		self.deg = 0
-		self.lap = 0
 
 	def run(self,
 		num_records,
@@ -24,7 +23,6 @@ class FPVDisp:
 		angle,
 		throttle,
 		rpm,
-		lap,
 		lidar,
 		esc_on,
 		disp_on,
@@ -43,7 +41,15 @@ class FPVDisp:
 		else:
 			kmph = 0
 
-		if image is not None: #self.on:
+		if self.cfg.HAVE_AHRS:
+			if not esc_on:
+				self.deg = 0
+				lap = 0
+			else:
+				self.deg += cycle_time * gyr_z
+				lap = int(self.deg / 1000 // 360)
+
+		if disp_on and image is not None: #self.on:
 
 			if self.cfg.CONTROLLER_TYPE != 'HID16CH' or self.on:
 
@@ -94,12 +100,7 @@ class FPVDisp:
 					printText(img, str(lidar), (0,59))
 
 				if self.cfg.HAVE_AHRS:
-					if not esc_on:
-						self.deg = 0
-					else:
-						self.deg += cycle_time * gyr_z
-						self.lap = int(self.deg / 1000 // 360)
-					printText(img, str(self.lap), (0,height-21))
+					printText(img, str(lap), (0,height-21))
 
 				if self.cfg.HAVE_INA226:
 					printText(img, "{:.2f}".format(volt_b), (0,height-11))
@@ -119,7 +120,7 @@ class FPVDisp:
 					cv2.destroyAllWindows()
 					self.on = False
 
-		return kmph
+		return kmph, lap
 
 	def shutdown(self):
 		self.on = False
