@@ -123,8 +123,8 @@ if [ "$1" = "0" ] || [ "$1" = "d" ] || [ "$1" = "a" ] || [ "$1" = "z" ] || [ "$1
     read str
   fi
   time rsync $RSYNC_OPT $TRAIN_URL:/dev/shm/$str/mycar/models ./
-  cp ./models/mypilot.h5 ./models/mypilot_${ymdhm}.h5
-  cp ./models/mypilot.tflite ./models/mypilot_${ymdhm}.tflite
+  cp ./models/mypilot-aug.h5 ./models/mypilot-aug_${ymdhm}.h5
+  cp ./models/mypilot-aug.tflite ./models/mypilot-aug_${ymdhm}.tflite
 fi
 
 if [ "$1" = "s" ]; then

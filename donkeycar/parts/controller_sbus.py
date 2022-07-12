@@ -88,9 +88,9 @@ class SbusHid16ch:
 			elif H == 7+2:
 				self.ch12 = L - 100
 			elif H == 7+3:
-				self.ch13 = L - 100
+				self.ch13 = (L - 100) * 100
 			elif H == 7+4:
-				self.ch14 = L - 100
+				self.ch14 = (L - 100) * 100
 			elif H == 7+5:
 				self.ch21 = L - 100
 			elif H == 7+6:

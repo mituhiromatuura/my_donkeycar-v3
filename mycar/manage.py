@@ -474,6 +474,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     class DriveMode:
         def run(self, mode,
                     user_angle, user_throttle,
+                    ai_throttle_mult, range, lidar,
                     pilot_angle, pilot_throttle):
             if mode == 'user':
                 return user_angle, user_throttle
@@ -482,10 +483,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 return pilot_angle if pilot_angle else 0.0, user_throttle
 
             else:
-                return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
+                if abs(user_throttle) > 0.3 or range > lidar:
+                    return pilot_angle if pilot_angle else 0.0, 0.0
+                return pilot_angle if pilot_angle else 0.0, pilot_throttle * ai_throttle_mult if pilot_throttle else 0.0
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
+                  'ch4', #ai_throttle_mult
+                  'ch6', #range
+                  'lidar',
                   'pilot/angle', 'pilot/throttle'],
           outputs=['angle', 'throttle'])
 
@@ -594,7 +600,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
     
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
-        from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
+        from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM, PiGPIO_SWPWM
         steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED)
         steering = PWMSteering(controller=steering_controller,
                                         left_pulse=cfg.STEERING_LEFT_PWM, 
@@ -605,8 +611,14 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                                             max_pulse=cfg.THROTTLE_FORWARD_PWM,
                                             zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        V.add(steering, inputs=['angle'], threaded=True)
-        V.add(throttle, inputs=['throttle'], threaded=True)
+        V.add(steering, inputs=['angle', 'ch13'], threaded=False)
+        V.add(throttle, inputs=['throttle', 'ch14'], threaded=False)
+
+        lidar_controller = PiGPIO_SWPWM(cfg.LIDAR_PWM_PIN, freq=cfg.LIDAR_PWM_FREQ, inverted=cfg.LIDAR_PWM_INVERTED)
+        lidar = PWMSteering(controller=lidar_controller,
+                                        left_pulse=cfg.LIDAR_LEFT_PWM, 
+                                        right_pulse=cfg.LIDAR_RIGHT_PWM)
+        V.add(lidar, inputs=['angle', 'ch23'], threaded=False)
 
     # OLED setup
     if cfg.USE_SSD1306_128_32:

@@ -78,6 +78,29 @@ class PiGPIO_PWM():
         self.set_pulse(pulse)
 
 
+class PiGPIO_SWPWM():
+
+    def __init__(self, pin, pgio=None, freq=75, inverted=False):
+        import pigpio
+
+        self.pin = pin
+        self.pgio = pgio or pigpio.pi()
+        self.freq = freq
+        self.inverted = inverted
+        self.pgio.set_mode(self.pin, pigpio.OUTPUT)
+        self.pgio.set_PWM_frequency(self.pin, self.freq)
+        self.pgio.set_PWM_range(self.pin, 1000000 // self.freq)
+
+    def __del__(self):
+        self.pgio.stop()
+
+    def set_pulse(self, pulse):
+        self.pgio.set_PWM_dutycycle(self.pin, int(pulse if self.inverted == False else 1e6 - pulse))
+
+    def run(self, pulse):
+        self.set_pulse(pulse)
+
+
 class JHat:
     ''' 
     PWM motor controler using Teensy emulating PCA9685. 
@@ -190,14 +213,15 @@ class PWMSteering:
         while self.running:
             self.controller.set_pulse(self.pulse)
 
-    def run_threaded(self, angle):
+    def run_threaded(self, angle, trim):
         # map absolute angle to angle that vehicle can implement.
         self.pulse = dk.utils.map_range(angle,
                                         self.LEFT_ANGLE, self.RIGHT_ANGLE,
                                         self.left_pulse, self.right_pulse)
+        self.pulse += trim
 
-    def run(self, angle):
-        self.run_threaded(angle)
+    def run(self, angle, trim):
+        self.run_threaded(angle, trim)
         self.controller.set_pulse(self.pulse)
 
     def shutdown(self):
@@ -242,16 +266,17 @@ class PWMThrottle:
         while self.running:
             self.controller.set_pulse(self.pulse)
 
-    def run_threaded(self, throttle):
+    def run_threaded(self, throttle, trim):
         if throttle > 0:
             self.pulse = dk.utils.map_range(throttle, 0, self.MAX_THROTTLE,
                                             self.zero_pulse, self.max_pulse)
         else:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
                                             self.min_pulse, self.zero_pulse)
+        self.pulse += trim
 
-    def run(self, throttle):
-        self.run_threaded(throttle)
+    def run(self, throttle, trim):
+        self.run_threaded(throttle, trim)
         self.controller.set_pulse(self.pulse)
 
     def shutdown(self):
