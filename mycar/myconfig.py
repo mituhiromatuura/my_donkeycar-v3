@@ -1,5 +1,5 @@
 DATA_PATH = '/dev/shm/mycar/data'
-DRIVE_LOOP_HZ = 50
+DRIVE_LOOP_HZ = 80
 
 PINION_GEAR = 27
 SPUR_GEAR = 64
@@ -26,6 +26,9 @@ if HAVE_REVCOUNT:
 
 #USE_RFCOMM = False
 USE_RFCOMM = True
+
+#USE_SAY = False
+USE_SAY = True
 
 PWM_CENTER = 1520
 PWM_MIN    = PWM_CENTER-420 #1100

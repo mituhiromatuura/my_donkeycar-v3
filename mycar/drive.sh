@@ -133,7 +133,7 @@ if [ "$1" = "s" ]; then
   read START
   echo -n "input end: "
   read END
-  time donkey makemovie --type linear --tub $TUB/ --out $LOGS/log_${ymdhm}_salient.mp4 --scale 1 --salient --model ./models/mypilot.h5 --start $START --end $END
+  time donkey makemovie --type linear --tub $TUB/ --out $LOGS/log_${ymdhm}_salient.mp4 --scale 1 --salient --model ./models/mypilot-aug.h5 --start $START --end $END
   read -p "Hit enter: rsync salient"
   rsync $RSYNC_OPT $LOGS/log_${ymdhm}_salient.mp4 $HOSTNAME:$RAMDISK
 fi

@@ -753,6 +753,15 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
             ],
             threaded=False)
 
+    if cfg.USE_SAY:
+        from donkeycar.parts.say import Say
+        V.add(Say(cfg), inputs=[
+            'user/mode',
+            'tub/num_records',
+            'lap',
+            ],
+            threaded=False)
+
     from donkeycar.parts.csvlog import CsvLog
     V.add(CsvLog(cfg),
         inputs=[

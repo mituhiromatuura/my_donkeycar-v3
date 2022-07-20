@@ -260,7 +260,7 @@ class MakeMovie(object):
                      int(p2[1] + l2 * math.sin((a2 + 270.0) * self.deg_to_rad))))
 
         # user is green, pilot is blue
-        cv2.line(img, p2, p22, (0, 0, 255), 2)
+        #cv2.line(img, p2, p22, (0, 0, 255), 2)
 
     def draw_steering_distribution(self, record, img):
         '''
