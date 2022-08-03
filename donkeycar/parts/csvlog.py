@@ -33,6 +33,7 @@ class CsvLog:
 		self.ai_throttle_mult = list()
 		self.gyro_gain = list()
 		self.stop_range = list()
+		self.odo = list()
 		self.lidar = list()
 
 		self.acl_x = list()
@@ -94,6 +95,7 @@ class CsvLog:
 		ai_throttle_mult,
 		gyro_gain,
 		stop_range,
+		odo,
 		lidar,
 
 		acl_x,
@@ -160,6 +162,7 @@ class CsvLog:
 				self.ai_throttle_mult.append(ai_throttle_mult)
 				self.gyro_gain.append(gyro_gain)
 				self.stop_range.append(stop_range)
+				self.odo.append(odo)
 				self.lidar.append(lidar)
 
 				self.acl_x.append(acl_x)
@@ -204,7 +207,7 @@ class CsvLog:
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
 		f.write("n,ms,va,vb,m,a,t,ua,ut,pa,pt,rpm,kmph,lap," + \
-				"throttle_scale,ai_throttle_mult,gyro_gain,stop_range,lidar," + \
+				"throttle_scale,ai_throttle_mult,gyro_gain,stop_range,odo,lidar," + \
 				"ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3," + \
 				"ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch11,ch12,ch13,ch14,ch21,ch22,ch23,ch24\n")
 		for i in range(self.n):
@@ -226,6 +229,7 @@ class CsvLog:
 			f.write(str(self.ai_throttle_mult[i]) + ",")
 			f.write(str(self.gyro_gain[i]) + ",")
 			f.write(str(self.stop_range[i]) + ",")
+			f.write(str(self.odo[i]) + ",")
 			f.write(str(self.lidar[i]) + ",")
 			f.write(str(self.acl_x[i]) + ",")
 			f.write(str(self.acl_y[i]) + ",")

@@ -74,20 +74,19 @@ class RfComm:
 			try:
 				if self.mode != mode:
 					self.mode = mode
-					self.bt.write("           \f,0,0,3\n")
-					self.bt.write(mode + "\f,0,0,3\n")
+					self.bt.write("{:<11s}".format(mode) + "\f,0,0,3\n")
 				if self.esc_on != esc_on:
 					self.esc_on = esc_on
 					if esc_on:
-						self.bt.write("ESC ON\f,210,0,3," + str(self.RED) + "\n")
+						self.bt.write("ESC ON\f,212,0,3," + str(self.RED) + "\n")
 					else:
-						self.bt.write("ESCOFF\f,210,0,3," + str(self.WHITE) + "\n")
+						self.bt.write("ESCOFF\f,212,0,3," + str(self.WHITE) + "\n")
 				if self.rec_on != rec_on:
 					self.rec_on = rec_on
 					if rec_on:
-						self.bt.write("REC ON\f,210,30,3," + str(self.RED) + "\n")
+						self.bt.write("REC ON\f,212,30,3," + str(self.RED) + "\n")
 					else:
-						self.bt.write("RECOFF\f,210,30,3," + str(self.WHITE) + "\n")
+						self.bt.write("RECOFF\f,212,30,3," + str(self.WHITE) + "\n")
 				if self.ch3 != ch3:
 					self.ch3 = ch3
 					self.bt.write("{:.2f}".format(ch3) + "\f,0,30,3\n")
@@ -100,8 +99,7 @@ class RfComm:
 					self.bt.write("{:.2f}".format(ch5) + "\f,0,90,3\n")
 				if self.ch6 != ch6:
 					self.ch6 = ch6
-					self.bt.write("   \f,0,120,3\n")
-					self.bt.write("{:d}".format(ch6) + "\f,0,120,3\n")
+					self.bt.write("{:<3d}".format(ch6) + "\f,0,120,3\n")
 
 				if lap is not None and self.lap != lap:
 					self.lap = lap
@@ -109,8 +107,7 @@ class RfComm:
 
 				if self.tnum + 1.0 < time.time():
 					self.tnum = time.time()
-					self.bt.write("\x17,90,90," + str(7*6*4) + "," + str(7*8) + ",0\n")
-					self.bt.write(str(num) + "\f,90,90,7\n")
+					self.bt.write("{:<5s}".format(str(num)) + "\f,90,90,7\n")
 
 				if self.tvb + 1.0 < time.time():
 					self.tvb = time.time()

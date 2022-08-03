@@ -23,6 +23,7 @@ class FPVDisp:
 		angle,
 		throttle,
 		rpm,
+		odo,
 		lidar,
 		esc_on,
 		disp_on,
@@ -109,6 +110,7 @@ class FPVDisp:
 				if self.cfg.HAVE_REVCOUNT:
 					printText(img, str(rpm), (width-8*9,height-1))
 					printText(img, "{:.1f}".format(kmph), (8*5,height-1))
+					printText(img, "{:.2f}".format(odo * self.cfg.GEAR_RATIO * self.cfg.TYRE_DIAMETER * 3.141592 / 1000), (8*5,height-11))
 
 				printText(img, "{:.1f}".format(cycle_time), (width-8*7//2,height-1))
 

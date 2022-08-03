@@ -38,7 +38,9 @@ class SbusHid16ch:
 		self.ch5 = 0
 		self.ch6 = 0
 		self.ch7 = 0
-		self.ch8 = 0
+		self.odo = 0
+		self.odo0 = 0
+		self.lidar = 0
 		self.ch11 = 0
 		self.ch12 = 0
 		self.ch13 = 0
@@ -70,7 +72,7 @@ class SbusHid16ch:
 		while self.on:
 			d = self.uart.read(16)
 			self.ch0, self.ch1, self.ch2, \
-				L, H, ch4x, ch5x, ch6x, self.ch8, \
+				L, H, ch4x, ch5x, self.odo, self.lidar, \
 				= struct.unpack('HHHBBHHHH', d)
 
 			if H == 3:
@@ -108,10 +110,14 @@ class SbusHid16ch:
 					self.esc_on = False
 					GPIO.output(self.gpio_pin_esc_on, GPIO.LOW)
 				else:
+					if not self.esc_on:
+						self.odo0 = self.odo
 					self.esc_on = True
 					GPIO.output(self.gpio_pin_esc_on, GPIO.HIGH)
 
 				if self.ch7 == 4:
+					if not self.recording:
+						self.odo0 = self.odo
 					self.recording = True
 				else:
 					self.recording = False
@@ -162,7 +168,8 @@ class SbusHid16ch:
 			round(self.ch5 / 100, 2), \
 			self.ch6 + 100, \
 			self.ch7, \
-			self.ch8, \
+			self.odo - self.odo0, \
+			self.lidar, \
 			self.ch11, \
 			self.ch12, \
 			self.ch13, \

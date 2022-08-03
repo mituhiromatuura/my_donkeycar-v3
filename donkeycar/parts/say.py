@@ -14,7 +14,7 @@ class Say:
 		if mode == 'user':
 			if num and self.num != num // 1000:
 				self.num = num // 1000
-				os.system("aplay ./wav/data" + str(num) + ".wav &")
+				os.system("aplay ./wav/data" + str(self.num) + "000.wav &")
 			if lap and self.lap != lap:
 				self.lap = lap
 				os.system("aplay ./wav/lap" + str(abs(lap)) + ".wav &")
