@@ -30,7 +30,7 @@ class RfComm:
 		self.MAGENTA = self.BLUE + self.RED
 		self.WHITE = self.RED + self.GREEN + self.BLUE
 
-		self.bt.write("\x1c,1,400,100,2000\n")
+		self.bt.write("\x1c,/kidou.wav\n")
 		self.bt.write("\x11,3\n")
 		self.bt.write("\x12,0\n")
 
@@ -104,6 +104,11 @@ class RfComm:
 				if lap is not None and self.lap != lap:
 					self.lap = lap
 					self.bt.write(str(abs(lap)) + "\f,90,30,7\n")
+					self.bt.write("\x1c,/lap" + str(abs(lap)) + ".wav\n")
+
+				if num is not None and self.num != num // 1000:
+					self.num = num // 1000
+					self.bt.write("\x1c,/data" + str(self.num) + "000.wav\n")
 
 				if self.tnum + 1.0 < time.time():
 					self.tnum = time.time()
@@ -120,17 +125,6 @@ class RfComm:
 				self.ok = False
 
 	def shutdown(self):
-		self.bt.write("\x1c,1,400,100,1000\n")
-		'''
-		self.bt.write("\x12,0\n")
-		#self.bt.write("BYE\f,0,0,0,0,7\n")
-		self.bt.write("ABCDEFG\f,0," + str(  0+8*0) + ",0,0,1," + str(0xf800) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str(  0+8*1) + ",0,0,2," + str(0x07e0) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str(  8+8*2) + ",0,0,3," + str(0x001f) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str( 24+8*3) + ",0,0,4," + str(0xffff) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str( 48+8*4) + ",0,0,5," + str(0xffe0) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str( 80+8*5) + ",0,0,6," + str(0x07ff) + "\n")
-		self.bt.write("ABCDEFG\f,0," + str(120+8*6) + ",0,0,7," + str(0xf81f) + "\n")
-		'''
 		self.bt.write("disconnected!\f,0,150,3," + str(self.YELLOW) + "\n")
+		self.bt.write("\x1c,/syuuryou.wav\n")
 		self.bt.close()

@@ -475,10 +475,13 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
     class DriveMode:
         def run(self, mode,
                     user_angle, user_throttle,
-                    ai_throttle_mult, range, lidar,
+                    throttle_scale,
+                    ai_throttle_mult,
+                    range,
+                    lidar,
                     pilot_angle, pilot_throttle):
             if mode == 'user':
-                return user_angle, user_throttle
+                return user_angle, user_throttle * throttle_scale
 
             elif mode == 'local_angle':
                 return pilot_angle if pilot_angle else 0.0, user_throttle
@@ -490,8 +493,9 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
     V.add(DriveMode(),
           inputs=['user/mode', 'user/angle', 'user/throttle',
-                  'ch4', #ai_throttle_mult
-                  'ch6', #range
+                  'ch3', #'throttle_scale'
+                  'ch4', #'ai_throttle_mult'
+                  'ch6', #'range'
                   'lidar',
                   'pilot/angle', 'pilot/throttle'],
           outputs=['angle', 'throttle'])
@@ -733,6 +737,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         ],
         outputs=[
             'kmph',
+            'odo',
             'lap',
         ],
         threaded=False

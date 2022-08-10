@@ -190,8 +190,8 @@ class MakeMovie(object):
                 printText(img, rpm, (90,height-1))
 
                 i = self.dic["odo"]
-                rpm = row[i]
-                printText(img, rpm, (40,height-21))
+                odo = "{:.2f}".format(float(row[i]))
+                printText(img, odo, (40,height-21))
 
             try:
                 i = self.dic["gyro_gain"]

@@ -39,6 +39,7 @@ class FPVDisp:
 
 		if self.cfg.HAVE_REVCOUNT:
 			kmph = round(rpm * self.cfg.KMPH, 2)
+			odo = round(odo * self.cfg.ODOM, 2)
 		else:
 			kmph = 0
 
@@ -110,7 +111,7 @@ class FPVDisp:
 				if self.cfg.HAVE_REVCOUNT:
 					printText(img, str(rpm), (width-8*9,height-1))
 					printText(img, "{:.1f}".format(kmph), (8*5,height-1))
-					printText(img, "{:.2f}".format(odo * self.cfg.GEAR_RATIO * self.cfg.TYRE_DIAMETER * 3.141592 / 1000), (8*5,height-11))
+					printText(img, "{:.2f}".format(odo), (8*5,height-11))
 
 				printText(img, "{:.1f}".format(cycle_time), (width-8*7//2,height-1))
 
@@ -122,7 +123,7 @@ class FPVDisp:
 					cv2.destroyAllWindows()
 					self.on = False
 
-		return kmph, lap
+		return kmph, odo, lap
 
 	def shutdown(self):
 		self.on = False
