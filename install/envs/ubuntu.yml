@@ -1,4 +1,4 @@
-name: donkey
+name: donkey-v3
 dependencies:
 
 - h5py==2.10.0
