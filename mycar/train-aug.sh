@@ -10,7 +10,7 @@ fi
 rm -r /run/shm/$1/mycar/data/tubx$2
 mkdir /run/shm/$1/mycar/data/tubx$2
 #cp /run/shm/$1/mycar/data/tub/*.json /run/shm/$1/mycar/data/tubx/
-./host_tools/offset.py /run/shm/$1/mycar/data/tub $2
+python ./host_tools/offset.py /run/shm/$1/mycar/data/tub $2
 
 #FPS
 echo -n "input FPS: (50/sec)"
@@ -36,8 +36,8 @@ if [ "$END" = "" ]; then
   echo "END: " $END
 fi
 
-#./host_tools/jpg2jpgx-s.py $1x $START $END $FPS $2
-./host_tools/jpg2jpgx.py $1 $START $END 1 $2
+#python ./host_tools/jpg2jpgx-s.py $1x $START $END $FPS $2
+python ./host_tools/jpg2jpgx.py $1 $START $END 1 $2
 
 read -p "Hit enter or ctrl + c"
 
@@ -57,7 +57,7 @@ if [ "$SEC" = "" ]; then
   echo "SEC: " $SEC
 fi
 
-./host_tools/record_check.py /run/shm/$1/mycar/data/tubx $2 $FPS $LOW $SEC $START
+python ./host_tools/record_check.py /run/shm/$1/mycar/data/tubx $2 $FPS $LOW $SEC $START
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 
