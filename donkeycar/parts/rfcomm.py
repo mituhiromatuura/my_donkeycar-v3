@@ -103,8 +103,8 @@ class RfComm:
 
 				if lap is not None and self.lap != lap:
 					self.lap = lap
-					self.bt.write(str(abs(lap)) + "\f,90,30,7\n")
-					self.bt.write("\x1c,/lap" + str(abs(lap)) + ".wav\n")
+					self.bt.write(str(lap) + "\f,90,30,7\n")
+					self.bt.write("\x1c,/lap" + str(lap) + ".wav\n")
 
 				if num is not None and self.num != num // 1000:
 					self.num = num // 1000
