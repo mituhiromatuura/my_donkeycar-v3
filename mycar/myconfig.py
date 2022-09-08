@@ -1,5 +1,5 @@
 DATA_PATH = '/dev/shm/mycar/data'
-DRIVE_LOOP_HZ = 80
+DRIVE_LOOP_HZ = 60
 
 PINION_GEAR = 18
 #PINION_GEAR = 22

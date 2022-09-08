@@ -10,6 +10,7 @@ class CsvLog:
 		self.sum = 0
 
 		self.num = list()
+		self.time = list()
 		self.milliseconds = list()
 
 		self.volt_a = list()
@@ -139,6 +140,7 @@ class CsvLog:
 				self.sum += milliseconds
 
 				self.num.append(num)
+				self.time.append(time.time())
 				self.milliseconds.append(milliseconds)
 
 				self.volt_a.append(volt_a)
@@ -206,12 +208,13 @@ class CsvLog:
 
 		print("log.csv save start", self.sum / self.n)
 		f = open("/run/shm/mycar/data/log.csv","w")
-		f.write("n,ms,va,vb,m,a,t,ua,ut,pa,pt,rpm,kmph,lap," + \
+		f.write("n,time,ms,va,vb,m,a,t,ua,ut,pa,pt,rpm,kmph,lap," + \
 				"throttle_scale,ai_throttle_mult,gyro_gain,stop_range,odo,lidar," + \
 				"ax,ay,az,gx,gy,gz,mx,my,mz,anx,any,anz,q0,q1,q2,q3," + \
 				"ch0,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch11,ch12,ch13,ch14,ch21,ch22,ch23,ch24\n")
 		for i in range(self.n):
 			f.write(str(self.num[i]) + ",")
+			f.write(str(self.time[i] - self.time[0]) + ",")
 			f.write(str(self.milliseconds[i]) + ",")
 			f.write(str(self.volt_a[i]) + ",")
 			f.write(str(self.volt_b[i]) + ",")
