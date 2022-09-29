@@ -63,6 +63,7 @@ class RfComm:
 		self.ch6 = 1000
 		self.num = -1
 		self.lap = 1000
+		self.laptm = -1.0
 		self.va = -1
 		self.vb = -1
 		self.tnum = time.time()
@@ -105,6 +106,11 @@ class RfComm:
 					self.lap = lap
 					self.bt.write(str(lap) + "\f,90,30,7\n")
 					self.bt.write("\x1c,/lap" + str(lap) + ".wav\n")
+					if self.laptm < 0:
+						self.laptm = time.time()
+					else:
+						self.bt.write("{:.2f}s".format(time.time() - self.laptm) + "\f,90,180,7\n")
+						self.laptm = time.time()
 
 				if num is not None and self.num != num // 1000:
 					self.num = num // 1000

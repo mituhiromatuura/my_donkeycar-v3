@@ -164,6 +164,10 @@ class MakeMovie(object):
         if self.csv_file == True:
             row = self.csv[self.iRec + 1]
 
+            i = self.dic["time"]
+            rec_time = float(row[i])
+            printText(img, "{:.2f}".format(rec_time), (width-8*9//2,height-11))
+
             i = self.dic["ms"]
             cycle_time = float(row[i])
             printText(img, "{:.1f}".format(cycle_time), (width-8*7//2,height-1))
@@ -214,7 +218,10 @@ class MakeMovie(object):
 
                 i = self.dic["lidar"]
                 lidar = row[i]
-                printText(img, lidar,(0,59))
+                if int(lidar) > int(stop_range):
+                    printText(img, lidar, (0,59))
+                else:
+                    printText(img, lidar, (0,59), (255,0,0))
 
             try:
                 i = self.dic["throttle_scale"]
