@@ -109,7 +109,11 @@ class RfComm:
 					if self.laptm < 0:
 						self.laptm = time.time()
 					else:
-						self.bt.write("{:.2f}s".format(time.time() - self.laptm) + "\f,90,180,7\n")
+						laptm = time.time() - self.laptm
+						self.bt.write("{:.2f}s".format(laptm) + "\f,90,180,7\n")
+						self.bt.write("\x1c,/" + str(int(laptm)) + ".wav\n")
+						self.bt.write("\x1c,/sec.wav\n")
+						self.bt.write("\x1c,/" + str(int(round(laptm, 2)*100%100)) + ".wav\n")
 						self.laptm = time.time()
 
 				if num is not None and self.num != num // 1000:
